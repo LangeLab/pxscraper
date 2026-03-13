@@ -18,7 +18,7 @@ pxscraper lookup     Fetch detailed metadata for specific PXD identifiers
 
 ## Installation
 
-Requires **Python 3.12+**.
+Requires **Python 3.12+** and [uv](https://pypi.org/project/uv/) for package management.
 
 ```bash
 # From source (development)

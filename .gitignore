@@ -30,9 +30,13 @@ full_metadata_of_PX.tsv
 filtered_metadata_of_PX.tsv
 *.tsv
 !examples/*.tsv
+!tests/fixtures/*.tsv
 
 # Plan / working docs
 plan.md
+
+# Local cache
+.pxscraper_cache/
 
 # Testing / coverage
 .coverage

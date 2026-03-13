@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ProteomeXchangeDataset id="PXD063194" formatVersion="1.4.0" xsi:noNamespaceSchemaLocation="proteomeXchange-1.4.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <CvList>
+        <Cv fullName="PSI-MS" uri="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo" id="MS"/>
+        <Cv fullName="PSI-MOD" uri="https://raw.githubusercontent.com/MICommunity/psidev/master/psi/mod/data/PSI-MOD.obo" id="MOD"/>
+        <Cv fullName="UNIMOD" uri="http://www.unimod.org/obo/unimod.obo" id="UNIMOD"/>
+    </CvList>
+    <DatasetSummary announceDate="2026-03-13" hostingRepository="PRIDE" title="Treadmill training and venlafaxine treatment on brain changes induced by prenatal dexamethasone.">
+        <Description>Prenatal exposure to dexamethasone (DEX) is known to induce long-term behavioral and molecular impairments. This research investigated whether moderate physical exercise (treadmill running) and venlafaxine administration, or their combination, applied in early adulthood, could modulate the behavioral and brain molecular alterations induced by prenatal DEX exposure. It was demonstrated that both exercise and venlafaxine treatment ameliorated deficits in memory, depressive-like behavior, and anxiety-like behavior. Subsequent proteomic analysis of the frontal cortex revealed significant modulation in the proteome following each intervention.</Description>
+        <ReviewLevel>
+            <cvParam cvRef="MS" accession="MS:1002854" name="Peer-reviewed dataset"/>
+        </ReviewLevel>
+        <RepositorySupport>
+            <cvParam cvRef="MS" accession="MS:1002857" name="Unsupported dataset by repository"/>
+        </RepositorySupport>
+    </DatasetSummary>
+    <DatasetIdentifierList>
+        <DatasetIdentifier>
+            <cvParam cvRef="MS" accession="MS:1001919" name="ProteomeXchange accession number" value="PXD063194"/>
+        </DatasetIdentifier>
+    </DatasetIdentifierList>
+    <DatasetOriginList>
+        <DatasetOrigin>
+            <cvParam cvRef="MS" accession="MS:1002868" name="Original data"/>
+        </DatasetOrigin>
+    </DatasetOriginList>
+    <SpeciesList>
+        <Species>
+            <cvParam cvRef="MS" accession="MS:1001469" name="taxonomy: scientific name" value="Rattus norvegicus (Rat)"/>
+            <cvParam cvRef="MS" accession="MS:1001467" name="taxonomy: NCBI TaxID" value="NEWT:10116"/>
+        </Species>
+    </SpeciesList>
+    <InstrumentList>
+        <Instrument id="Instrument_1">
+            <cvParam cvRef="MS" accession="MS:1003028" name="Orbitrap Exploris 480"/>
+        </Instrument>
+    </InstrumentList>
+    <ModificationList>
+        <cvParam cvRef="MOD" accession="MOD:00397" name="iodoacetamide derivatized residue"/>
+    </ModificationList>
+    <ContactList>
+        <Contact id="project_submitter">
+            <cvParam cvRef="MS" accession="MS:1000586" name="contact name" value="Maciej Suski"/>
+            <cvParam cvRef="MS" accession="MS:1000589" name="contact email" value="maciej.suski@uj.edu.pl"/>
+            <cvParam cvRef="MS" accession="MS:1000590" name="contact affiliation" value="Chair of Pharmacology"/>
+            <cvParam cvRef="MS" accession="MS:1002037" name="dataset submitter"/>
+        </Contact>
+        <Contact id="project_lab_head">
+            <cvParam cvRef="MS" accession="MS:1002332" name="lab head"/>
+            <cvParam cvRef="MS" accession="MS:1000586" name="contact name" value="Maciej Suski"/>
+            <cvParam cvRef="MS" accession="MS:1000589" name="contact email" value="maciej.suski@uj.edu.pl"/>
+            <cvParam cvRef="MS" accession="MS:1000590" name="contact affiliation" value="Department of Pharmacology Faculty of Medicine Jagiellonian University Medical College Krakow, Poland"/>
+        </Contact>
+    </ContactList>
+    <PublicationList>
+        <Publication id="PMID40738385">
+            <cvParam cvRef="MS" accession="MS:1000879" name="PubMed identifier" value="40738385"/>
+            <cvParam cvRef="MS" accession="MS:1002866" name="Reference" value="Głombik K, Kukla-Bartoszek M, Suski M, Curzytek K, Grygier B, Basta-Kaim A. Comparative effectiveness of moderate treadmill training and venlafaxine treatment on long-lasting brain changes induced by prenatal dexamethasone exposure. Neuropharmacology. 2025 279:110604"/>
+        </Publication>
+        <Publication id="DOI-10_1016_j_neuropharm_2025_110604">
+            <cvParam cvRef="MS" accession="MS:1001922" name="Digital Object Identifier (DOI)" value="10.1016/j.neuropharm.2025.110604"/>
+        </Publication>
+    </PublicationList>
+    <KeywordList>
+        <cvParam cvRef="MS" accession="MS:1001925" name="submitter keyword" value="frontal cortex, depression,rat, dexamethasone, anxiety"/>
+    </KeywordList>
+    <FullDatasetLinkList>
+        <FullDatasetLink>
+            <cvParam cvRef="MS" accession="MS:1002852" name="Dataset FTP location" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194"/>
+        </FullDatasetLink>
+        <FullDatasetLink>
+            <cvParam cvRef="MS" accession="MS:1001930" name="PRIDE project URI" value="https://www.ebi.ac.uk/pride/archive/projects/PXD063194"/>
+        </FullDatasetLink>
+    </FullDatasetLinkList>
+    <DatasetFileList>
+        <DatasetFile id="FILE_1" name="22F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/22F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_2" name="26F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/26F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_3" name="16F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/16F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_4" name="19F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/19F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_5" name="36F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/36F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_6" name="20230703_224020_PAN_FCx_2_lib.sne">
+            <cvParam cvRef="MS" accession="MS:1002849" name="Search engine output file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/20230703_224020_PAN_FCx_2_lib.sne"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_7" name="28F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/28F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_8" name="32F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/32F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_9" name="20F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/20F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_10" name="21F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/21F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_11" name="17F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/17F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_12" name="42F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/42F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_13" name="15F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/15F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_14" name="24F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/24F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_15" name="40F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/40F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_16" name="checksum.txt">
+            <cvParam cvRef="MS" accession="MS:1002851" name="Other type file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/checksum.txt"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_17" name="38F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/38F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_18" name="41F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/41F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_19" name="39F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/39F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_20" name="37F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/37F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_21" name="Rat_FCx.kit">
+            <cvParam cvRef="MS" accession="MS:1002845" name="Associated file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/Rat_FCx.kit"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_22" name="27F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/27F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_23" name="33F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/33F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_24" name="29F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/29F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_25" name="34F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/34F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_26" name="23F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/23F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_27" name="25F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/25F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_28" name="31F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/31F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_29" name="30F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/30F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_30" name="35F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/35F.raw"/>
+        </DatasetFile>
+        <DatasetFile id="FILE_31" name="18F.raw">
+            <cvParam cvRef="MS" accession="MS:1002846" name="Associated raw file URI" value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2026/03/PXD063194/18F.raw"/>
+        </DatasetFile>
+    </DatasetFileList>
+    <RepositoryRecordList>
+        <RepositoryRecord name="Treadmill training and venlafaxine treatment on brain changes induced by prenatal dexamethasone." label="PRIDE project" recordID="PXD063194" repositoryID="PRIDE" uri="https://www.ebi.ac.uk/pride/archive/projects/PXD063194"/>
+    </RepositoryRecordList>
+</ProteomeXchangeDataset>

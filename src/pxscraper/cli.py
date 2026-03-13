@@ -1,5 +1,7 @@
 """CLI entry point for pxscraper."""
 
+from pathlib import Path
+
 import click
 
 from pxscraper import __version__
@@ -13,11 +15,48 @@ def main():
 
 @main.command()
 @click.option("-o", "--output", default="px_datasets.tsv", help="Output file path.")
+@click.option(
+    "--cache-dir",
+    default=None,
+    type=click.Path(),
+    help="Cache directory [default: .pxscraper_cache/ in cwd].",
+)
 @click.option("--refresh", is_flag=True, help="Force re-download even if cached.")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
-def fetch(output, refresh, verbose):
+def fetch(output, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
-    click.echo("fetch command not yet implemented (see plan.md for Phase 1)")
+    from pxscraper import api, cache, parse
+
+    cache_base = Path(cache_dir) if cache_dir else None
+    cdir = cache.get_cache_dir(cache_base)
+
+    # Check cache
+    if not refresh and not cache.is_stale("summary", cache_dir=cdir):
+        df = cache.load("summary", cache_dir=cdir)
+        info = cache.cache_info("summary", cache_dir=cdir)
+        if df is not None:
+            click.echo(f"Using cached data ({info['rows']} datasets, from cache in {cdir})")
+            df.to_csv(output, sep="\t", index=False)
+            click.echo(f"Wrote {len(df)} datasets to {output}")
+            return
+
+    # Fetch from API
+    if verbose:
+        click.echo("Downloading full dataset listing from ProteomeCentral...")
+    raw_tsv = api.fetch_summary()
+
+    if verbose:
+        click.echo("Parsing TSV...")
+    df = parse.parse_summary_tsv(raw_tsv)
+
+    # Save to cache
+    cache.save(df, "summary", cache_dir=cdir)
+    if verbose:
+        click.echo(f"Cached {len(df)} datasets in {cdir}")
+
+    # Write output
+    df.to_csv(output, sep="\t", index=False)
+    click.echo(f"Fetched {len(df)} datasets → {output}")
 
 
 @main.command()
