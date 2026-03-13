@@ -42,9 +42,13 @@ def fetch_dataset_xml(
 ) -> str:
     """Download the XML metadata for a single PXD dataset.
 
+    Validates the dataset ID format before making the request.
     Includes a polite delay before the request to avoid overloading
     the ProteomeCentral server.
     """
+    from pxscraper.models import validate_pxd_id
+
+    dataset_id = validate_pxd_id(dataset_id)
     if delay > 0:
         time.sleep(delay)
     s = session or _session()

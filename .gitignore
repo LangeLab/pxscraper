@@ -34,6 +34,7 @@ filtered_metadata_of_PX.tsv
 
 # Plan / working docs
 plan.md
+initial-look.md
 
 # Local cache
 .pxscraper_cache/

@@ -28,7 +28,7 @@ class TestCliBasics:
         runner = CliRunner()
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "0.2.0" in result.output
+        assert "0.2.2" in result.output
 
     def test_help(self):
         runner = CliRunner()
@@ -184,7 +184,7 @@ class TestStubs:
 
 
 class TestFetchErrors:
-    def test_fetch_network_error(self, tmp_path):
+    def test_fetch_connection_error(self, tmp_path):
         runner = CliRunner()
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
@@ -199,4 +199,60 @@ class TestFetchErrors:
             )
 
         assert result.exit_code != 0
+        assert "Could not reach ProteomeCentral" in result.output
         assert not output_file.exists()
+
+    def test_fetch_timeout_error(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        with patch(
+            "pxscraper.api.fetch_summary",
+            side_effect=requests.Timeout("timed out"),
+        ):
+            result = runner.invoke(
+                main,
+                ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
+            )
+
+        assert result.exit_code != 0
+        assert "timed out" in result.output
+
+    def test_fetch_http_error(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        with patch(
+            "pxscraper.api.fetch_summary",
+            side_effect=requests.HTTPError("500 Server Error"),
+        ):
+            result = runner.invoke(
+                main,
+                ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
+            )
+
+        assert result.exit_code != 0
+        assert "error" in result.output.lower()
+
+
+# ---------------------------------------------------------------------------
+# parse diagnostics in CLI output
+# ---------------------------------------------------------------------------
+
+
+class TestFetchDiagnostics:
+    def test_fetch_reports_no_skipped_rows_verbose(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+            result = runner.invoke(
+                main,
+                ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir), "-v"],
+            )
+
+        assert result.exit_code == 0
+        assert "no rows skipped" in result.output.lower()

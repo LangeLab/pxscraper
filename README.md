@@ -10,11 +10,11 @@ Query, filter, and retrieve proteomics dataset metadata from [ProteomeXchange](h
 
 ## Commands
 
-| Command | Status | Description |
-|---------|--------|-------------|
-| `pxscraper fetch` | **Available** | Download the full dataset listing from ProteomeCentral |
+| Command            | Status            | Description                                                   |
+| ------------------ | ----------------- | ------------------------------------------------------------- |
+| `pxscraper fetch`  | **Available**     | Download the full dataset listing from ProteomeCentral        |
 | `pxscraper filter` | Planned (Phase 2) | Filter datasets by species, repository, keywords, dates, etc. |
-| `pxscraper lookup` | Planned (Phase 3) | Fetch detailed metadata for specific PXD identifiers |
+| `pxscraper lookup` | Planned (Phase 3) | Fetch detailed metadata for specific PXD identifiers          |
 
 ## Installation
 
@@ -46,17 +46,17 @@ uv run pxscraper fetch -v
 
 The output TSV has the following columns:
 
-| Column | Description |
-|--------|-------------|
-| `dataset_id` | ProteomeXchange identifier (e.g. PXD063194) |
-| `title` | Dataset title |
-| `repository` | Hosting repository (PRIDE, MassIVE, jPOST, iProX, etc.) |
-| `species` | Species name(s) |
-| `instrument` | Instrument type(s) |
-| `publication` | Associated publication(s) |
-| `lab_head` | Lab head / PI |
-| `announce_date` | Date the dataset was announced |
-| `keywords` | Dataset keywords |
+| Column          | Description                                             |
+| --------------- | ------------------------------------------------------- |
+| `dataset_id`    | ProteomeXchange identifier (e.g. PXD063194)             |
+| `title`         | Dataset title                                           |
+| `repository`    | Hosting repository (PRIDE, MassIVE, jPOST, iProX, etc.) |
+| `species`       | Species name(s)                                         |
+| `instrument`    | Instrument type(s)                                      |
+| `publication`   | Associated publication(s)                               |
+| `lab_head`      | Lab head / PI                                           |
+| `announce_date` | Date the dataset was announced                          |
+| `keywords`      | Dataset keywords                                        |
 
 ### Caching
 
@@ -83,7 +83,7 @@ uv run ruff format --check src/ tests/
 
 ## Project structure
 
-```
+```bash
 src/pxscraper/
 ├── __init__.py      # Package version
 ├── cli.py           # Click CLI entry point

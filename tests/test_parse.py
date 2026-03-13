@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pxscraper.parse import parse_dataset_xml, parse_summary_tsv, strip_html
+from pxscraper.parse import ParseResult, parse_dataset_xml, parse_summary_tsv, strip_html
 
 # ---------------------------------------------------------------------------
 # strip_html
@@ -63,7 +63,9 @@ SAMPLE_TSV = (
 
 class TestParseSummaryTsv:
     def test_basic_shape(self):
-        df = parse_summary_tsv(SAMPLE_TSV)
+        result = parse_summary_tsv(SAMPLE_TSV)
+        assert isinstance(result, ParseResult)
+        df = result.df
         assert len(df) == 2
         assert list(df.columns) == [
             "dataset_id", "title", "repository", "species",
@@ -71,27 +73,27 @@ class TestParseSummaryTsv:
         ]
 
     def test_html_stripped_from_dataset_id(self):
-        df = parse_summary_tsv(SAMPLE_TSV)
+        df = parse_summary_tsv(SAMPLE_TSV).df
         assert df.iloc[0]["dataset_id"] == "PXD063194"
         assert df.iloc[1]["dataset_id"] == "PXD036143"
 
     def test_html_stripped_from_publication(self):
-        df = parse_summary_tsv(SAMPLE_TSV)
+        df = parse_summary_tsv(SAMPLE_TSV).df
         assert "<a" not in df.iloc[0]["publication"]
         assert "10.1016/x" in df.iloc[0]["publication"]
 
     def test_announcement_xml_dropped(self):
-        df = parse_summary_tsv(SAMPLE_TSV)
+        df = parse_summary_tsv(SAMPLE_TSV).df
         assert "announcementXML" not in df.columns
 
     def test_trailing_whitespace_stripped(self):
-        df = parse_summary_tsv(SAMPLE_TSV)
+        df = parse_summary_tsv(SAMPLE_TSV).df
         # Species had trailing space in raw data
         assert df.iloc[0]["species"] == "Rattus norvegicus"
 
     def test_no_empty_rows(self):
         tsv_with_blank = SAMPLE_TSV + "\t\t\t\t\t\t\t\t\t\t\n"
-        df = parse_summary_tsv(tsv_with_blank)
+        df = parse_summary_tsv(tsv_with_blank).df
         assert len(df) == 2
 
     def test_single_row(self):
@@ -100,9 +102,18 @@ class TestParseSummaryTsv:
             "LabHead\tAnnounce Date\tKeywords\tannouncementXML\n"
             "PXD000001\tTest\tPRIDE\tHuman\tOrbitrap\tno pub\tDoe\t2020-01-01\ttest,\t\n"
         )
-        df = parse_summary_tsv(single)
+        df = parse_summary_tsv(single).df
         assert len(df) == 1
         assert df.iloc[0]["dataset_id"] == "PXD000001"
+
+    def test_total_raw_lines_counted(self):
+        result = parse_summary_tsv(SAMPLE_TSV)
+        assert result.total_raw_lines == 2
+
+    def test_no_skipped_lines_on_clean_data(self):
+        result = parse_summary_tsv(SAMPLE_TSV)
+        assert result.skipped_count == 0
+        assert result.skipped_lines == []
 
 
 # ---------------------------------------------------------------------------
@@ -117,14 +128,15 @@ class TestParseSummaryTsvFixture:
         return fixture_path.read_text()
 
     def test_fixture_parses(self, fixture_tsv):
-        df = parse_summary_tsv(fixture_tsv)
+        result = parse_summary_tsv(fixture_tsv)
+        df = result.df
         assert len(df) >= 3
         assert "dataset_id" in df.columns
         # All dataset IDs should start with PXD
         assert df["dataset_id"].str.startswith("PXD").all()
 
     def test_fixture_no_html_in_any_cell(self, fixture_tsv):
-        df = parse_summary_tsv(fixture_tsv)
+        df = parse_summary_tsv(fixture_tsv).df
         for col in df.columns:
             series = df[col].dropna()
             assert not series.str.contains("<a ", regex=False).any(), (
@@ -354,7 +366,7 @@ class TestParseEdgeCases:
             "Dataset Identifier\tTitle\tRepos\tSpecies\tInstrument\t"
             "Publication\tLabHead\tAnnounce Date\tKeywords\tannouncementXML\n"
         )
-        df = parse_summary_tsv(header_only)
+        df = parse_summary_tsv(header_only).df
         assert len(df) == 0
         assert "dataset_id" in df.columns
 

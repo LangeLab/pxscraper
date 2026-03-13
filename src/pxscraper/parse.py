@@ -2,6 +2,8 @@
 
 import io
 import re
+import warnings
+from dataclasses import dataclass, field
 
 import pandas as pd
 from lxml import etree
@@ -12,6 +14,19 @@ from pxscraper.models import DROP_COLUMNS, RAW_TO_CLEAN_COLUMNS
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 
 
+@dataclass
+class ParseResult:
+    """Result of parsing summary TSV, including diagnostics."""
+
+    df: pd.DataFrame
+    total_raw_lines: int = 0
+    skipped_lines: list[int] = field(default_factory=list)
+
+    @property
+    def skipped_count(self) -> int:
+        return len(self.skipped_lines)
+
+
 def strip_html(text: str) -> str:
     """Remove HTML tags from a string, keeping the inner text."""
     if not isinstance(text, str):
@@ -19,16 +34,32 @@ def strip_html(text: str) -> str:
     return _HTML_TAG_RE.sub("", text).strip()
 
 
-def parse_summary_tsv(raw_tsv: str) -> pd.DataFrame:
+def parse_summary_tsv(raw_tsv: str) -> ParseResult:
     """Parse the raw ProteomeCentral summary TSV into a clean DataFrame.
 
-    - Strips HTML tags from all cells
-    - Renames columns to snake_case
-    - Drops the announcementXML column
+    Returns a ParseResult containing:
+    - df: the cleaned DataFrame
+    - total_raw_lines: number of data lines in the raw TSV
+    - skipped_lines: line numbers of rows that could not be parsed
     """
-    df = pd.read_csv(
-        io.StringIO(raw_tsv), sep="\t", dtype=str, on_bad_lines="warn"
-    )
+    # Count raw data lines (total lines minus header, minus trailing blank)
+    raw_lines = raw_tsv.strip().split("\n")
+    total_raw_lines = max(0, len(raw_lines) - 1)  # subtract header
+
+    # Capture warnings from on_bad_lines="warn" to track skipped rows
+    skipped_lines: list[int] = []
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        df = pd.read_csv(
+            io.StringIO(raw_tsv), sep="\t", dtype=str, on_bad_lines="warn"
+        )
+    for w in caught:
+        msg = str(w.message)
+        if "Expected" in msg and "fields" in msg:
+            # Extract line number from warning like "Skipping line 36502: ..."
+            match = re.search(r"line (\d+)", msg)
+            if match:
+                skipped_lines.append(int(match.group(1)))
 
     # Strip trailing whitespace from column names (API has trailing tab)
     df.columns = df.columns.str.strip()
@@ -57,7 +88,7 @@ def parse_summary_tsv(raw_tsv: str) -> pd.DataFrame:
     # Drop fully empty rows
     df = df.dropna(how="all").reset_index(drop=True)
 
-    return df
+    return ParseResult(df=df, total_raw_lines=total_raw_lines, skipped_lines=skipped_lines)
 
 
 def _xpath_text(root, xpath: str, default: str = "") -> str:

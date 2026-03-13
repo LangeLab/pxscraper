@@ -25,6 +25,8 @@ def main():
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 def fetch(output, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
+    import requests
+
     from pxscraper import api, cache, parse
 
     cache_base = Path(cache_dir) if cache_dir else None
@@ -41,13 +43,37 @@ def fetch(output, cache_dir, refresh, verbose):
             return
 
     # Fetch from API
-    if verbose:
-        click.echo("Downloading full dataset listing from ProteomeCentral...")
-    raw_tsv = api.fetch_summary()
+    try:
+        if verbose:
+            click.echo("Downloading full dataset listing from ProteomeCentral...")
+        raw_tsv = api.fetch_summary()
+    except requests.ConnectionError:
+        raise click.ClickException(
+            "Could not reach ProteomeCentral. Check your network connection."
+        )
+    except requests.Timeout:
+        raise click.ClickException(
+            "Request to ProteomeCentral timed out. Try again later."
+        )
+    except requests.HTTPError as exc:
+        raise click.ClickException(f"ProteomeCentral returned an error: {exc}")
 
     if verbose:
         click.echo("Parsing TSV...")
-    df = parse.parse_summary_tsv(raw_tsv)
+    result = parse.parse_summary_tsv(raw_tsv)
+    df = result.df
+
+    # Report parse diagnostics
+    if result.skipped_count > 0:
+        click.echo(
+            f"Parsed {len(df)} datasets ({result.skipped_count} malformed row(s) skipped)"
+        )
+        if verbose:
+            for line_num in result.skipped_lines:
+                click.echo(f"  skipped line {line_num}")
+    else:
+        if verbose:
+            click.echo(f"Parsed {len(df)} datasets (no rows skipped)")
 
     # Save to cache
     cache.save(df, "summary", cache_dir=cdir)
@@ -56,7 +82,7 @@ def fetch(output, cache_dir, refresh, verbose):
 
     # Write output
     df.to_csv(output, sep="\t", index=False)
-    click.echo(f"Fetched {len(df)} datasets → {output}")
+    click.echo(f"Fetched {len(df)} datasets -> {output}")
 
 
 @main.command()

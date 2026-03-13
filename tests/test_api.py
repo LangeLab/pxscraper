@@ -12,7 +12,7 @@ from pxscraper.api import (
     fetch_dataset_xml,
     fetch_summary,
 )
-from pxscraper.models import USER_AGENT
+from pxscraper.models import USER_AGENT, validate_pxd_id
 
 # ---------------------------------------------------------------------------
 # Session
@@ -127,3 +127,55 @@ class TestFetchDatasetXml:
 
         with pytest.raises(requests.HTTPError):
             fetch_dataset_xml("PXD000001", session=mock_session, delay=0)
+
+    def test_rejects_invalid_dataset_id(self):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            fetch_dataset_xml("INVALID", delay=0)
+
+    def test_rejects_empty_dataset_id(self):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            fetch_dataset_xml("", delay=0)
+
+    def test_rejects_partial_pxd_id(self):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            fetch_dataset_xml("PXD12", delay=0)
+
+
+# ---------------------------------------------------------------------------
+# validate_pxd_id
+# ---------------------------------------------------------------------------
+
+
+class TestValidatePxdId:
+    def test_valid_six_digit(self):
+        assert validate_pxd_id("PXD000001") == "PXD000001"
+
+    def test_valid_long_id(self):
+        assert validate_pxd_id("PXD0632194") == "PXD0632194"
+
+    def test_strips_whitespace(self):
+        assert validate_pxd_id("  PXD063194  ") == "PXD063194"
+
+    def test_rejects_lowercase(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("pxd000001")
+
+    def test_rejects_no_digits(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("PXD")
+
+    def test_rejects_too_few_digits(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("PXD123")
+
+    def test_rejects_non_pxd_prefix(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("MSV000001")
+
+    def test_rejects_empty(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("")
+
+    def test_rejects_path_traversal(self):
+        with pytest.raises(ValueError):
+            validate_pxd_id("../etc/passwd")
