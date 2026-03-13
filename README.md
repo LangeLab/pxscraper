@@ -10,7 +10,7 @@ Query, filter, and retrieve proteomics dataset metadata from [ProteomeXchange](h
 
 ### Planned commands
 
-```
+```bash
 pxscraper fetch      Download the full dataset listing from ProteomeCentral
 pxscraper filter     Filter datasets by species, repository, keywords, dates, etc.
 pxscraper lookup     Fetch detailed metadata for specific PXD identifiers
@@ -45,7 +45,7 @@ uv run ruff check src/
 
 ## Project structure
 
-```
+```bash
 src/pxscraper/
 ├── __init__.py      # Package version
 ├── cli.py           # Click CLI entry point
@@ -62,4 +62,4 @@ The original single-file Selenium scraper is preserved in `legacy/proteomeXchang
 
 ## License
 
-MIT
+MIT License. See [LICENSE](LICENSE) for details.
