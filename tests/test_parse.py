@@ -374,6 +374,26 @@ class TestParseEdgeCases:
         with pytest.raises(Exception):
             parse_summary_tsv("")
 
+    def test_xml_no_contacts_has_consistent_keys(self):
+        """parse_dataset_xml returns all 6 contact keys even when ContactList is empty."""
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<ProteomeXchangeDataset id="PXD000001" formatVersion="1.4.0"'
+            ' xsi:noNamespaceSchemaLocation="proteomeXchange-1.4.0.xsd"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            '<DatasetSummary announceDate="2024-01-01" hostingRepository="PRIDE"'
+            ' title="Minimal"><Description>Test</Description></DatasetSummary>'
+            "<ContactList/>"
+            "</ProteomeXchangeDataset>"
+        )
+        result = parse_dataset_xml(xml)
+        for key in (
+            "submitter_name", "submitter_email", "submitter_affiliation",
+            "lab_head_name", "lab_head_email", "lab_head_affiliation",
+        ):
+            assert key in result, f"Missing key: {key}"
+            assert result[key] == "", f"Expected empty string for {key}"
+
     def test_xml_invalid_raises(self):
         with pytest.raises(Exception):
             parse_dataset_xml("this is not xml")

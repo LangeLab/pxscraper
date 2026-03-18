@@ -1,6 +1,7 @@
 """CLI entry point for pxscraper."""
 
 import re
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -133,6 +134,16 @@ def filter(input_file, output, species, repo, keywords, after, before,
                 re.compile(pattern)
             except re.error as e:
                 raise click.ClickException(f"Invalid regex for --{name}: {e}")
+
+    # --- Validate date format ---
+    for opt_name, date_str in [("after", after), ("before", before)]:
+        if date_str:
+            try:
+                datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                raise click.ClickException(
+                    f"Invalid date for --{opt_name}: {date_str!r} (expected YYYY-MM-DD)"
+                )
 
     # --- Load input data ---
     if input_file:

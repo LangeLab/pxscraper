@@ -411,6 +411,22 @@ class TestFilterCommand:
         df = pd.read_csv(output_file, sep="\t")
         assert len(df) == 1
 
+    def test_filter_invalid_after_date(self):
+        """--after with invalid date format shows a friendly error."""
+        runner = CliRunner()
+        result = runner.invoke(main, ["filter", "--after", "2024-99-99", "-s", "human"])
+        assert result.exit_code != 0
+        assert "Invalid date" in result.output
+        assert "--after" in result.output
+
+    def test_filter_invalid_before_date(self):
+        """--before with invalid date format shows a friendly error."""
+        runner = CliRunner()
+        result = runner.invoke(main, ["filter", "--before", "not-a-date", "-s", "human"])
+        assert result.exit_code != 0
+        assert "Invalid date" in result.output
+        assert "--before" in result.output
+
 
 # ---------------------------------------------------------------------------
 # error handling

@@ -133,6 +133,13 @@ def parse_dataset_xml(raw_xml: str) -> dict:
     kw = root.xpath('.//KeywordList/cvParam[@name="submitter keyword"]/@value')
     result["keywords"] = "; ".join(kw)
 
+    # Pre-seed contact fields so the dict always has consistent keys
+    for key in (
+        "submitter_name", "submitter_email", "submitter_affiliation",
+        "lab_head_name", "lab_head_email", "lab_head_affiliation",
+    ):
+        result[key] = ""
+
     # Contacts
     for contact in root.xpath(".//ContactList/Contact"):
         contact_id = contact.get("id", "")
