@@ -12,7 +12,7 @@ Query, filter, and retrieve proteomics dataset metadata from [ProteomeXchange](h
 | ------------------ | ------------- | ------------------------------------------------------------- |
 | `pxscraper fetch`  | **Available** | Download the full dataset listing from ProteomeCentral        |
 | `pxscraper filter` | **Available** | Filter datasets by species, repository, keywords, dates, etc. |
-| `pxscraper lookup` | Planned       | Fetch detailed metadata for specific PXD identifiers          |
+| `pxscraper lookup` | **Available** | Fetch detailed metadata for specific PXD identifiers         |
 
 ## Installation
 
@@ -92,6 +92,36 @@ uv run pxscraper filter -k "brain" --keyword-columns "title"
 ```
 
 When no `--input` is given, `filter` automatically uses cached data or downloads fresh data from ProteomeCentral.
+
+### `pxscraper lookup` — fetch detailed XML metadata for specific datasets
+
+```bash
+# Look up one or more IDs by flag
+uv run pxscraper lookup --ids PXD000001
+
+# Multiple IDs (comma-separated)
+uv run pxscraper lookup --ids PXD000001,PXD000002,PXD000003
+
+# Read IDs from a file (one per line)
+uv run pxscraper lookup --ids-file my_ids.txt
+
+# Pipeline: feed filter output directly into lookup
+uv run pxscraper filter -s "Homo sapiens" -o filtered.tsv
+uv run pxscraper lookup --input filtered.tsv -o detailed.tsv
+
+# Skip confirmation prompt (useful in scripts)
+uv run pxscraper lookup --ids PXD000001 --yes
+
+# Custom request delay (default: 1.0 s)
+uv run pxscraper lookup --ids PXD000001 --delay 2.0
+
+# Custom cache directory
+uv run pxscraper lookup --ids PXD000001 --cache-dir /data/cache
+```
+
+`lookup` outputs a TSV with one row per dataset containing 19 fields: `dataset_id`, `title`, `description`, `species`, `instruments`, `modifications`, `keywords`, `review_level`, `announce_date`, `repository`, `submitter_name`, `submitter_email`, `submitter_affiliation`, `lab_head_name`, `lab_head_email`, `lab_head_affiliation`, `pubmed_ids`, `dois`, and `ftp_location`.
+
+XML files are cached on disk so repeated lookups do not re-download data. Remove `.pxscraper_cache/PXD*.xml` to force a fresh fetch.
 
 ## Development
 
