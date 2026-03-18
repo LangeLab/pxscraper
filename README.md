@@ -99,7 +99,7 @@ When no `--input` is given, `filter` automatically uses cached data or downloads
 # Install with dev dependencies
 uv sync --extra dev
 
-# Run tests (163 tests)
+# Run tests (168 tests)
 uv run pytest
 
 # Run tests with coverage

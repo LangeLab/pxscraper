@@ -1,10 +1,10 @@
 # pxscraper Test Matrix
 
-> **163 tests** across 5 modules | v0.3.1 | Python 3.12+
+> **168 tests** across 5 modules | v0.3.2 | Python 3.12+
 
 ---
 
-## test_parse.py  (44 tests)
+## test_parse.py  (45 tests)
 
 ### TestStripHtml (8)
 
@@ -79,18 +79,19 @@ Runs the XML parser against a real fixture file (`PXD063194`).
 | 3   | `test_fixture_has_species`     | Contains "Rattus"                       | pass   | Species extraction on real data                  |
 | 4   | `test_fixture_has_contacts`    | Submitter name non-empty, email has `@` | pass   | Contact parsing on real data                     |
 
-### TestParseEdgeCases (6)
+### TestParseEdgeCases (7)
 
-Boundary conditions: minimal XML, multi-species, empty inputs, invalid inputs.
+Boundary conditions: minimal XML, multi-species, empty inputs, invalid inputs, missing contacts.
 
-| #   | Test                           | What it verifies                                             | Expect | Why                                                 |
-| --- | ------------------------------ | ------------------------------------------------------------ | ------ | --------------------------------------------------- |
-| 1   | `test_xml_missing_description` | Minimal XML with no optional elements returns empty strings  | pass   | Not all datasets have descriptions/species/keywords |
-| 2   | `test_xml_multiple_species`    | Two species joined with `;` separator                        | pass   | Many datasets are multi-organism                    |
-| 3   | `test_tsv_with_only_header`    | Header-only TSV returns 0-row DataFrame with correct columns | pass   | Edge case: empty ProteomeCentral response           |
-| 4   | `test_tsv_empty_string_raises` | Empty string raises an exception                             | pass   | Caller must handle empty input                      |
-| 5   | `test_xml_invalid_raises`      | Non-XML string raises an exception                           | pass   | Malformed data must not silently succeed            |
-| 6   | `test_xml_empty_string_raises` | Empty string raises an exception                             | pass   | Null input must not silently succeed                |
+| #   | Test                                       | What it verifies                                             | Expect | Why                                                 |
+| --- | ------------------------------------------ | ------------------------------------------------------------ | ------ | --------------------------------------------------- |
+| 1   | `test_xml_missing_description`             | Minimal XML with no optional elements returns empty strings  | pass   | Not all datasets have descriptions/species/keywords |
+| 2   | `test_xml_multiple_species`                | Two species joined with `;` separator                        | pass   | Many datasets are multi-organism                    |
+| 3   | `test_tsv_with_only_header`                | Header-only TSV returns 0-row DataFrame with correct columns | pass   | Edge case: empty ProteomeCentral response           |
+| 4   | `test_tsv_empty_string_raises`             | Empty string raises an exception                             | pass   | Caller must handle empty input                      |
+| 5   | `test_xml_invalid_raises`                  | Non-XML string raises an exception                           | pass   | Malformed data must not silently succeed            |
+| 6   | `test_xml_empty_string_raises`             | Empty string raises an exception                             | pass   | Null input must not silently succeed                |
+| 7   | `test_xml_no_contacts_has_consistent_keys` | Empty ContactList → all 6 contact keys present as `""`       | pass   | Consistent key set for DataFrame construction       |
 
 ---
 
@@ -147,7 +148,7 @@ Unit tests for the `validate_pxd_id()` function in models.py.
 
 ---
 
-## test_cli.py  (28 tests)
+## test_cli.py  (33 tests)
 
 ### TestCliBasics (3)
 
@@ -155,7 +156,7 @@ CLI entry point: `--version`, `--help`, subcommand discovery.
 
 | #   | Test              | What it verifies                                            | Expect | Why                          |
 | --- | ----------------- | ----------------------------------------------------------- | ------ | ---------------------------- |
-| 1   | `test_version`    | `--version` prints `0.3.0`                                  | pass   | Version pinned to release    |
+| 1   | `test_version`    | `--version` prints `0.3.2`                                  | pass   | Version pinned to release    |
 | 2   | `test_help`       | `--help` lists `fetch`, `filter`, `lookup`                  | pass   | All subcommands discoverable |
 | 3   | `test_fetch_help` | `fetch --help` shows `--output`, `--refresh`, `--cache-dir` | pass   | CLI options documented       |
 
@@ -180,26 +181,30 @@ Placeholder command that will be implemented in a later phase.
 | --- | ------------------ | -------------------------------------------- | ------ | ------------------------ |
 | 1   | `test_lookup_stub` | `lookup` exits 0, says "not yet implemented" | pass   | Graceful stub -- Phase 3 |
 
-### TestFilterCommand (14)
+### TestFilterCommand (18)
 
 End-to-end filter command (mocked API, real file I/O via `tmp_path`).
 
-| #   | Test                                       | What it verifies                                        | Expect | Why                                   |
-| --- | ------------------------------------------ | ------------------------------------------------------- | ------ | ------------------------------------- |
-| 1   | `test_filter_help`                         | `filter --help` shows all filter flags                  | pass   | All options discoverable              |
-| 2   | `test_filter_requires_at_least_one_filter` | No filters raises ClickException                        | pass   | User must specify at least one filter |
-| 3   | `test_filter_with_input_file`              | `-i data.tsv -s Homo` reads file rather than auto-fetch | pass   | Explicit input path works             |
-| 4   | `test_filter_auto_fetch`                   | Auto-downloads from API when no `--input`               | pass   | Zero-friction first use               |
-| 5   | `test_filter_uses_cache`                   | Uses existing cache (0 API calls)                       | pass   | Cache avoids re-download              |
-| 6   | `test_filter_by_species`                   | `-s "Mus musculus"` returns correct subset              | pass   | Species filter works end-to-end       |
-| 7   | `test_filter_by_repo`                      | `-r MassIVE` returns correct subset                     | pass   | Repo filter works end-to-end          |
-| 8   | `test_filter_no_matches`                   | Nonexistent species shows "No datasets matched"         | pass   | Graceful empty result                 |
-| 9   | `test_filter_by_date`                      | `--after 2025-02-01` returns correct subset             | pass   | Date range filter works end-to-end    |
-| 10  | `test_filter_connection_error`             | ConnectionError shows friendly message                  | pass   | Network errors handled in filter too  |
-| 11  | `test_filter_invalid_species_regex`        | Bad regex for `--species` shows friendly error          | pass   | User-supplied regex validated early   |
-| 12  | `test_filter_invalid_instrument_regex`     | Bad regex for `--instrument` shows friendly error       | pass   | User-supplied regex validated early   |
-| 13  | `test_filter_by_instrument`                | `--instrument "Q Exactive"` returns correct subset      | pass   | Instrument filter works end-to-end    |
-| 14  | `test_filter_keyword_file`                 | `-k keywords.txt` reads keyword file correctly          | pass   | Keyword file path works via CLI       |
+| #   | Test                                        | What it verifies                                          | Expect | Why                                       |
+| --- | ------------------------------------------- | --------------------------------------------------------- | ------ | ----------------------------------------- |
+| 1   | `test_filter_help`                          | `filter --help` shows all filter flags                    | pass   | All options discoverable                  |
+| 2   | `test_filter_requires_at_least_one_filter`  | No filters raises ClickException                          | pass   | User must specify at least one filter     |
+| 3   | `test_filter_with_input_file`               | `-i data.tsv -s Homo` reads file rather than auto-fetch   | pass   | Explicit input path works                 |
+| 4   | `test_filter_auto_fetch`                    | Auto-downloads from API when no `--input`                 | pass   | Zero-friction first use                   |
+| 5   | `test_filter_uses_cache`                    | Uses existing cache (0 API calls)                         | pass   | Cache avoids re-download                  |
+| 6   | `test_filter_by_species`                    | `-s "Mus musculus"` returns correct subset                | pass   | Species filter works end-to-end           |
+| 7   | `test_filter_by_repo`                       | `-r MassIVE` returns correct subset                       | pass   | Repo filter works end-to-end              |
+| 8   | `test_filter_no_matches`                    | Nonexistent species shows "No datasets matched"           | pass   | Graceful empty result                     |
+| 9   | `test_filter_by_date`                       | `--after 2025-02-01` returns correct subset               | pass   | Date range filter works end-to-end        |
+| 10  | `test_filter_connection_error`              | ConnectionError shows friendly message                    | pass   | Network errors handled in filter too      |
+| 11  | `test_filter_invalid_species_regex`         | Bad regex for `--species` shows friendly error            | pass   | User-supplied regex validated early       |
+| 12  | `test_filter_invalid_instrument_regex`      | Bad regex for `--instrument` shows friendly error         | pass   | User-supplied regex validated early       |
+| 13  | `test_filter_by_instrument`                 | `--instrument "Q Exactive"` returns correct subset        | pass   | Instrument filter works end-to-end        |
+| 14  | `test_filter_keyword_file`                  | `-k keywords.txt` reads keyword file correctly            | pass   | Keyword file path works via CLI           |
+| 15  | `test_filter_invalid_after_date`            | Bad `--after` date shows friendly error with option name  | pass   | Date format validated before data load    |
+| 16  | `test_filter_invalid_before_date`           | Bad `--before` date shows friendly error with option name | pass   | Date format validated before data load    |
+| 17  | `test_filter_after_later_than_before`       | `--after` > `--before` shows friendly error               | pass   | Logically invalid range caught early      |
+| 18  | `test_filter_unknown_keyword_column_warns`  | Unknown column in `--keyword-columns` emits Warning line  | pass   | User notified of typo, filter still runs  |
 
 ### TestFetchErrors (3)
 
@@ -387,11 +392,11 @@ Boundary conditions: empty DataFrames, special characters, strict date format.
 
 | Module         |   Tests | All pass | Skipped | Expected failures |
 | -------------- | ------: | :------: | :-----: | :---------------: |
-| test_parse.py  |      44 |   yes    |    0    |         0         |
+| test_parse.py  |      45 |   yes    |    0    |         0         |
 | test_filter.py |      53 |   yes    |    0    |         0         |
 | test_api.py    |      21 |   yes    |    0    |         0         |
-| test_cli.py    |      28 |   yes    |    0    |         0         |
+| test_cli.py    |      33 |   yes    |    0    |         0         |
 | test_cache.py  |      17 |   yes    |    0    |         0         |
-| **Total**      | **163** | **yes**  |  **0**  |       **0**       |
+| **Total**      | **168** | **yes**  |  **0**  |       **0**       |
 
 All tests are deterministic, offline (mocked HTTP), and use `tmp_path` for I/O — no network calls, no side effects.
