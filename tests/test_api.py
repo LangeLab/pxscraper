@@ -10,6 +10,7 @@ from pxscraper.api import (
     SUMMARY_URL,
     _session,
     fetch_dataset_xml,
+    fetch_datasets_xml,
     fetch_summary,
 )
 from pxscraper.models import USER_AGENT, validate_pxd_id
@@ -139,6 +140,124 @@ class TestFetchDatasetXml:
     def test_rejects_partial_pxd_id(self):
         with pytest.raises(ValueError, match="Invalid dataset ID"):
             fetch_dataset_xml("PXD12", delay=0)
+
+
+# ---------------------------------------------------------------------------
+# fetch_datasets_xml (batch)
+# ---------------------------------------------------------------------------
+
+
+class TestFetchDatasetsXml:
+    """Tests for the batch fetch_datasets_xml function."""
+
+    def _make_session(self, xml_text=MOCK_XML):
+        mock_session = MagicMock()
+        mock_resp = MagicMock()
+        mock_resp.text = xml_text
+        mock_resp.raise_for_status = MagicMock()
+        mock_session.get.return_value = mock_resp
+        return mock_session
+
+    def test_returns_dict_of_xml(self):
+        mock_session = self._make_session()
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(["PXD000001"], session=mock_session, delay=0)
+        assert result == {"PXD000001": MOCK_XML}
+
+    def test_multiple_ids(self):
+        mock_session = self._make_session()
+        ids = ["PXD000001", "PXD000002", "PXD000003"]
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(ids, session=mock_session, delay=0)
+        assert set(result.keys()) == set(ids)
+        assert all(v == MOCK_XML for v in result.values())
+
+    def test_empty_list_returns_empty_dict(self):
+        result = fetch_datasets_xml([], delay=0)
+        assert result == {}
+
+    def test_invalid_id_raises_before_any_request(self):
+        mock_session = self._make_session()
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            fetch_datasets_xml(["PXD000001", "BADID"], session=mock_session, delay=0)
+        mock_session.get.assert_not_called()
+
+    def test_per_id_http_error_stores_none(self):
+        mock_session = MagicMock()
+        good_resp = MagicMock()
+        good_resp.text = MOCK_XML
+        good_resp.raise_for_status = MagicMock()
+
+        bad_resp = MagicMock()
+        bad_resp.raise_for_status.side_effect = requests.HTTPError("404")
+
+        mock_session.get.side_effect = [good_resp, bad_resp]
+
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(["PXD000001", "PXD000002"], session=mock_session, delay=0)
+
+        assert result["PXD000001"] == MOCK_XML
+        assert result["PXD000002"] is None
+
+    def test_per_id_connection_error_stores_none(self):
+        mock_session = MagicMock()
+        mock_session.get.side_effect = requests.ConnectionError("network down")
+
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(["PXD000001"], session=mock_session, delay=0)
+
+        assert result["PXD000001"] is None
+
+    def test_all_fail_returns_all_none(self):
+        mock_session = MagicMock()
+        mock_session.get.side_effect = requests.Timeout("timed out")
+
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(
+                ["PXD000001", "PXD000002"], session=mock_session, delay=0
+            )
+
+        assert result == {"PXD000001": None, "PXD000002": None}
+
+    def test_keyboard_interrupt_returns_partial(self):
+        """KeyboardInterrupt mid-batch returns whatever was already fetched."""
+        fetched = []
+
+        def _side_effect(url, timeout):
+            if len(fetched) == 0:
+                resp = MagicMock()
+                resp.text = MOCK_XML
+                resp.raise_for_status = MagicMock()
+                fetched.append(resp)
+                return resp
+            raise KeyboardInterrupt
+
+        mock_session = MagicMock()
+        mock_session.get.side_effect = _side_effect
+
+        with patch("pxscraper.api.time.sleep"):
+            result = fetch_datasets_xml(
+                ["PXD000001", "PXD000002"], session=mock_session, delay=0
+            )
+
+        # Only PXD000001 was successfully fetched before interrupt
+        assert result["PXD000001"] == MOCK_XML
+        assert "PXD000002" not in result
+
+    def test_delay_is_passed_through(self):
+        mock_session = self._make_session()
+        with patch("pxscraper.api.time.sleep") as mock_sleep:
+            fetch_datasets_xml(["PXD000001"], session=mock_session, delay=1.5)
+        mock_sleep.assert_called_once_with(1.5)
+
+    def test_creates_own_session_if_none(self):
+        with patch("pxscraper.api._session") as mock_session_fn:
+            mock_session = self._make_session()
+            mock_session_fn.return_value = mock_session
+            with patch("pxscraper.api.time.sleep"):
+                result = fetch_datasets_xml(["PXD000001"], delay=0)
+            mock_session_fn.assert_called_once()
+            assert "PXD000001" in result
 
 
 # ---------------------------------------------------------------------------

@@ -86,3 +86,43 @@ def cache_info(name: str, cache_dir: Path | None = None) -> dict | None:
     cache_dir = cache_dir or get_cache_dir()
     meta = _read_meta(cache_dir)
     return meta.get(name)
+
+
+# ---------------------------------------------------------------------------
+# Per-dataset XML cache
+# ---------------------------------------------------------------------------
+
+
+def save_xml(dataset_id: str, raw_xml: str, cache_dir: Path | None = None) -> Path:
+    """Write the raw XML for *dataset_id* to ``<cache_dir>/<dataset_id>.xml``.
+
+    ProteomeXchange XML is immutable once published, so no TTL is tracked.
+    """
+    from pxscraper.models import validate_pxd_id
+
+    dataset_id = validate_pxd_id(dataset_id)
+    cache_dir = cache_dir or get_cache_dir()
+    filepath = cache_dir / f"{dataset_id}.xml"
+    filepath.write_text(raw_xml, encoding="utf-8")
+    return filepath
+
+
+def load_xml(dataset_id: str, cache_dir: Path | None = None) -> str | None:
+    """Return cached XML for *dataset_id*, or ``None`` if not cached."""
+    from pxscraper.models import validate_pxd_id
+
+    dataset_id = validate_pxd_id(dataset_id)
+    cache_dir = cache_dir or get_cache_dir()
+    filepath = cache_dir / f"{dataset_id}.xml"
+    if not filepath.exists():
+        return None
+    return filepath.read_text(encoding="utf-8")
+
+
+def is_xml_cached(dataset_id: str, cache_dir: Path | None = None) -> bool:
+    """Return ``True`` if an XML file for *dataset_id* exists on disk."""
+    from pxscraper.models import validate_pxd_id
+
+    dataset_id = validate_pxd_id(dataset_id)
+    cache_dir = cache_dir or get_cache_dir()
+    return (cache_dir / f"{dataset_id}.xml").exists()

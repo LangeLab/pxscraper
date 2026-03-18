@@ -10,8 +10,11 @@ from pxscraper.cache import (
     cache_info,
     get_cache_dir,
     is_stale,
+    is_xml_cached,
     load,
+    load_xml,
     save,
+    save_xml,
 )
 from pxscraper.models import CACHE_DIR_NAME, CACHE_META_FILE
 
@@ -174,3 +177,64 @@ class TestCorruptedMetadata:
         loaded = load("recovery", cache_dir=cache_dir)
         assert loaded is not None
         assert len(loaded) == 3
+
+
+# ---------------------------------------------------------------------------
+# XML cache (save_xml / load_xml / is_xml_cached)
+# ---------------------------------------------------------------------------
+
+MOCK_XML = '<?xml version="1.0"?><ProteomeXchangeDataset id="PXD000001"/>'
+
+
+class TestXmlCache:
+    def test_save_creates_xml_file(self, cache_dir):
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        assert (cache_dir / "PXD000001.xml").exists()
+
+    def test_load_returns_saved_content(self, cache_dir):
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        loaded = load_xml("PXD000001", cache_dir=cache_dir)
+        assert loaded == MOCK_XML
+
+    def test_load_nonexistent_returns_none(self, cache_dir):
+        result = load_xml("PXD999999", cache_dir=cache_dir)
+        assert result is None
+
+    def test_is_xml_cached_true_after_save(self, cache_dir):
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        assert is_xml_cached("PXD000001", cache_dir=cache_dir) is True
+
+    def test_is_xml_cached_false_when_missing(self, cache_dir):
+        assert is_xml_cached("PXD999999", cache_dir=cache_dir) is False
+
+    def test_save_overwrites_existing(self, cache_dir):
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        new_xml = '<ProteomeXchangeDataset id="PXD000001" updated="true"/>'
+        save_xml("PXD000001", new_xml, cache_dir=cache_dir)
+        assert load_xml("PXD000001", cache_dir=cache_dir) == new_xml
+
+    def test_multiple_ids_are_independent(self, cache_dir):
+        xml2 = '<ProteomeXchangeDataset id="PXD000002"/>'
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        save_xml("PXD000002", xml2, cache_dir=cache_dir)
+        assert load_xml("PXD000001", cache_dir=cache_dir) == MOCK_XML
+        assert load_xml("PXD000002", cache_dir=cache_dir) == xml2
+
+    def test_invalid_id_raises_on_save(self, cache_dir):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            save_xml("BADID", MOCK_XML, cache_dir=cache_dir)
+
+    def test_invalid_id_raises_on_load(self, cache_dir):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            load_xml("BADID", cache_dir=cache_dir)
+
+    def test_invalid_id_raises_on_is_cached(self, cache_dir):
+        with pytest.raises(ValueError, match="Invalid dataset ID"):
+            is_xml_cached("BADID", cache_dir=cache_dir)
+
+    def test_xml_and_tsv_coexist(self, cache_dir, sample_df):
+        """XML cache and TSV cache share the same directory without conflict."""
+        save(sample_df, "summary", cache_dir=cache_dir)
+        save_xml("PXD000001", MOCK_XML, cache_dir=cache_dir)
+        assert load("summary", cache_dir=cache_dir) is not None
+        assert load_xml("PXD000001", cache_dir=cache_dir) == MOCK_XML
