@@ -401,3 +401,118 @@ class TestParseEdgeCases:
     def test_xml_empty_string_raises(self):
         with pytest.raises(Exception):
             parse_dataset_xml("")
+
+
+# ---------------------------------------------------------------------------
+# Bug B1 — XML with default namespace
+# parse_dataset_xml must work when the XML root declares xmlns="..."
+# (real ProteomeXchange XML files use this in some format versions)
+# ---------------------------------------------------------------------------
+
+SAMPLE_XML_WITH_NS = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<ProteomeXchangeDataset id="PXD000003"
+    xmlns="http://proteomexchange.org/schema"
+    formatVersion="1.4.0">
+  <DatasetSummary title="Namespace dataset" announceDate="2025-03-01"
+      hostingRepository="PRIDE">
+    <Description>Testing default namespace handling.</Description>
+  </DatasetSummary>
+  <ReviewLevel>
+    <cvParam name="Peer-reviewed dataset"/>
+  </ReviewLevel>
+  <SpeciesList>
+    <Species>
+      <cvParam name="taxonomy: scientific name" value="Homo sapiens"/>
+    </Species>
+  </SpeciesList>
+  <InstrumentList>
+    <Instrument id="Instrument_1">
+      <cvParam name="Orbitrap Exploris 480"/>
+    </Instrument>
+  </InstrumentList>
+  <ModificationList>
+    <cvParam name="phosphorylated residue"/>
+  </ModificationList>
+  <KeywordList>
+    <cvParam name="submitter keyword" value="phosphoproteomics"/>
+  </KeywordList>
+  <ContactList>
+    <Contact id="project_submitter">
+      <cvParam name="contact name" value="Alice NS"/>
+      <cvParam name="contact email" value="alice@example.com"/>
+      <cvParam name="contact affiliation" value="NS University"/>
+    </Contact>
+  </ContactList>
+  <PublicationList>
+    <Publication id="P1">
+      <cvParam name="PubMed identifier" value="99999"/>
+    </Publication>
+  </PublicationList>
+  <FullDatasetLinkList>
+    <FullDatasetLink>
+      <cvParam name="Dataset FTP location"
+               value="ftp://ftp.pride.ebi.ac.uk/archive/PXD000003"/>
+    </FullDatasetLink>
+  </FullDatasetLinkList>
+</ProteomeXchangeDataset>
+"""
+
+
+class TestParseDatasetXmlNamespace:
+    """parse_dataset_xml must correctly parse XML that declares a default namespace.
+
+    Without namespace stripping, root.find('DatasetSummary') returns None and
+    all XPath queries return empty lists, silently yielding empty strings for
+    title, species, instruments, etc.
+    """
+
+    def test_title_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["title"] == "Namespace dataset"
+
+    def test_description_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["description"] == "Testing default namespace handling."
+
+    def test_announce_date_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["announce_date"] == "2025-03-01"
+
+    def test_repository_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["repository"] == "PRIDE"
+
+    def test_species_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["species"] == "Homo sapiens"
+
+    def test_instruments_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["instruments"] == "Orbitrap Exploris 480"
+
+    def test_review_level_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["review_level"] == "Peer-reviewed dataset"
+
+    def test_keywords_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["keywords"] == "phosphoproteomics"
+
+    def test_submitter_contact_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["submitter_name"] == "Alice NS"
+        assert result["submitter_email"] == "alice@example.com"
+
+    def test_pubmed_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["pubmed_ids"] == "99999"
+
+    def test_ftp_location_populated(self):
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert "PXD000003" in result["ftp_location"]
+
+    def test_dataset_id_always_works(self):
+        """dataset_id from root attribute works even without the fix (regression guard)."""
+        result = parse_dataset_xml(SAMPLE_XML_WITH_NS)
+        assert result["dataset_id"] == "PXD000003"

@@ -65,12 +65,12 @@ MOCK_XML_TEMPLATE = """\
                name="Digital Object Identifier (DOI)" value="10.1234/test" />
     </Publication>
   </PublicationList>
-  <DatasetFileList>
-    <DatasetFile id="FILE_1" name="test.raw">
-      <cvParam accession="PRIDE:0000410" name="Dataset FTP location"
-               value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2025/01/PXD000001" />
-    </DatasetFile>
-  </DatasetFileList>
+  <FullDatasetLinkList>
+    <FullDatasetLink>
+      <cvParam accession="MS:1002852" name="Dataset FTP location"
+               value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2025/01/{dataset_id}" />
+    </FullDatasetLink>
+  </FullDatasetLinkList>
 </ProteomeXchangeDataset>
 """
 
@@ -241,6 +241,27 @@ class TestLookupHappyPath:
             assert result.exit_code == 0, result.output
             assert Path("lookup_results.tsv").exists()
 
+    def test_ftp_location_populated(self, runner, tmp_path):
+        """FTP location in parsed output must contain the dataset ID."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        with patch(
+            "pxscraper.api.fetch_datasets_xml",
+            return_value={"PXD000001": MOCK_XML_001},
+        ):
+            result = runner.invoke(
+                main,
+                ["lookup", "--ids", "PXD000001",
+                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+            )
+
+        assert result.exit_code == 0, result.output
+        df = pd.read_csv(out, sep="\t")
+        ftp = df.iloc[0]["ftp_location"]
+        assert ftp != "", "ftp_location must not be empty"
+        assert "PXD000001" in ftp
+
 
 # ---------------------------------------------------------------------------
 # --yes / confirmation prompt
@@ -263,18 +284,57 @@ class TestLookupConfirmation:
             )
         assert result.exit_code == 0
 
-    def test_prompt_abort_exits_cleanly(self, runner, tmp_path):
-        """Answering 'n' to the confirmation prompt aborts without error code 1."""
+    def test_small_batch_needs_no_yes_flag(self, runner, tmp_path):
+        """A lookup with ≤LOOKUP_CONFIRM_THRESHOLD IDs completes without --yes."""
         out = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
-            runner.invoke(
+        with patch(
+            "pxscraper.api.fetch_datasets_xml",
+            return_value={"PXD000001": MOCK_XML_001},
+        ):
+            result = runner.invoke(
                 main,
                 ["lookup", "--ids", "PXD000001",
                  "-o", str(out), "--cache-dir", str(cache_dir)],
-                input="n\n",
             )
+
+        assert result.exit_code == 0, result.output
+
+    def test_large_batch_triggers_confirmation_prompt(self, runner, tmp_path):
+        """More than LOOKUP_CONFIRM_THRESHOLD IDs triggers a confirmation prompt."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        ids = ["PXD000001", "PXD000002", "PXD000003"]
+        xml_map = {pid: MOCK_XML_TEMPLATE.format(dataset_id=pid) for pid in ids}
+
+        with patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", 2):
+            with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+                result = runner.invoke(
+                    main,
+                    ["lookup", "--ids", ",".join(ids),
+                     "-o", str(out), "--cache-dir", str(cache_dir)],
+                    input="n\n",
+                )
+
+        assert not out.exists()
+
+    def test_prompt_abort_exits_cleanly(self, runner, tmp_path):
+        """Answering 'n' to the confirmation prompt aborts without fetching."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+
+        ids = ["PXD000001", "PXD000002", "PXD000003"]
+
+        with patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", 2):
+            with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
+                runner.invoke(
+                    main,
+                    ["lookup", "--ids", ",".join(ids),
+                     "-o", str(out), "--cache-dir", str(cache_dir)],
+                    input="n\n",
+                )
 
         mock_fetch.assert_not_called()
         assert not out.exists()

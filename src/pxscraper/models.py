@@ -34,6 +34,9 @@ DEFAULT_CACHE_MAX_AGE_HOURS = 24
 # Polite delay between individual XML requests (seconds)
 XML_REQUEST_DELAY = 1.0
 
+# Number of IDs above which the 'lookup' command asks for confirmation
+LOOKUP_CONFIRM_THRESHOLD = 50
+
 # User-Agent string for API requests
 USER_AGENT = (
     f"pxscraper/{__version__}"

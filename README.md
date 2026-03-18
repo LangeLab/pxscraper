@@ -12,7 +12,7 @@ Query, filter, and retrieve proteomics dataset metadata from [ProteomeXchange](h
 | ------------------ | ------------- | ------------------------------------------------------------- |
 | `pxscraper fetch`  | **Available** | Download the full dataset listing from ProteomeCentral        |
 | `pxscraper filter` | **Available** | Filter datasets by species, repository, keywords, dates, etc. |
-| `pxscraper lookup` | **Available** | Fetch detailed metadata for specific PXD identifiers         |
+| `pxscraper lookup` | **Available** | Fetch detailed metadata for specific PXD identifiers          |
 
 ## Installation
 
@@ -129,7 +129,7 @@ XML files are cached on disk so repeated lookups do not re-download data. Remove
 # Install with dev dependencies
 uv sync --extra dev
 
-# Run tests (168 tests)
+# Run tests (228 tests)
 uv run pytest
 
 # Run tests with coverage

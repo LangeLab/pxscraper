@@ -250,7 +250,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     import requests
 
     from pxscraper import api, cache, parse
-    from pxscraper.models import validate_pxd_id
+    from pxscraper.models import validate_pxd_id, LOOKUP_CONFIRM_THRESHOLD
 
     # ------------------------------------------------------------------ #
     # 1. Collect IDs from all sources                                      #
@@ -324,7 +324,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     # ------------------------------------------------------------------ #
     # 4. Confirmation prompt for large fetches                             #
     # ------------------------------------------------------------------ #
-    if to_fetch and not yes:
+    if len(to_fetch) > LOOKUP_CONFIRM_THRESHOLD and not yes:
         est_seconds = int(len(to_fetch) * delay)
         click.confirm(
             f"Fetch XML for {len(to_fetch)} dataset(s)? "

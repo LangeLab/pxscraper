@@ -99,6 +99,12 @@ def parse_dataset_xml(raw_xml: str) -> dict:
     """
     root = etree.fromstring(raw_xml.encode("utf-8"))
 
+    # Strip namespace prefixes so all XPath/find() calls work without a
+    # namespace map, regardless of whether the XML declares a default xmlns.
+    for elem in root.iter():
+        if isinstance(elem.tag, str):
+            elem.tag = elem.tag.rpartition("}")[2]
+
     result = {}
 
     # Dataset ID

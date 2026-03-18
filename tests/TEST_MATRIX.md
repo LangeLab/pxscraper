@@ -1,10 +1,10 @@
 # pxscraper Test Matrix
 
-> **168 tests** across 5 modules | v0.3.2 | Python 3.12+
+> **228 tests** across 6 modules | v0.4.1 | Python 3.12+
 
 ---
 
-## test_parse.py (45 tests)
+## test_parse.py (57 tests)
 
 ### TestStripHtml (8)
 
@@ -95,60 +95,7 @@ Boundary conditions: minimal XML, multi-species, empty inputs, invalid inputs, m
 
 ---
 
-## test_api.py (21 tests)
-
-### TestSession (2)
-
-Validates the HTTP session factory.
-
-| #   | Test                            | What it verifies                                 | Expect | Why                                                     |
-| --- | ------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------------------- |
-| 1   | `test_user_agent_set`           | Session User-Agent matches `USER_AGENT` constant | pass   | Polite crawling — identify ourselves to ProteomeCentral |
-| 2   | `test_returns_session_instance` | Returns a `requests.Session`                     | pass   | Type contract                                           |
-
-### TestFetchSummary (3)
-
-Tests the summary TSV download function (mocked HTTP).
-
-| #   | Test                               | What it verifies                                                      | Expect | Why                                      |
-| --- | ---------------------------------- | --------------------------------------------------------------------- | ------ | ---------------------------------------- |
-| 1   | `test_returns_text`                | Returns response `.text`, calls correct URL, calls `raise_for_status` | pass   | Core fetch contract                      |
-| 2   | `test_raises_on_http_error`        | HTTPError propagates to caller                                        | pass   | 500/404 errors must not be swallowed     |
-| 3   | `test_creates_own_session_if_none` | Creates session internally when none provided                         | pass   | Default usage path (no explicit session) |
-
-### TestFetchDatasetXml (7)
-
-Tests per-dataset XML fetching (mocked HTTP).
-
-| #   | Test                              | What it verifies                           | Expect | Why                                           |
-| --- | --------------------------------- | ------------------------------------------ | ------ | --------------------------------------------- |
-| 1   | `test_returns_xml`                | Returns XML text, correct URL templating   | pass   | Core fetch contract                           |
-| 2   | `test_applies_delay`              | `time.sleep` called with specified delay   | pass   | Rate-limiting to be polite to ProteomeCentral |
-| 3   | `test_no_delay_when_zero`         | `time.sleep` not called when delay=0       | pass   | Tests and fast paths skip the delay           |
-| 4   | `test_raises_on_http_error`       | HTTPError propagates                       | pass   | Error transparency                            |
-| 5   | `test_rejects_invalid_dataset_id` | `ValueError` on `"INVALID"`                | pass   | Input validation before HTTP call             |
-| 6   | `test_rejects_empty_dataset_id`   | `ValueError` on `""`                       | pass   | Empty string must not reach the API           |
-| 7   | `test_rejects_partial_pxd_id`     | `ValueError` on `"PXD12"` (too few digits) | pass   | Enforces `^PXD\d{6,}$` regex                  |
-
-### TestValidatePxdId (9)
-
-Unit tests for the `validate_pxd_id()` function in models.py.
-
-| #   | Test                          | What it verifies                        | Expect | Why                                      |
-| --- | ----------------------------- | --------------------------------------- | ------ | ---------------------------------------- |
-| 1   | `test_valid_six_digit`        | `"PXD000001"` accepted                  | pass   | Normal 6-digit ID                        |
-| 2   | `test_valid_long_id`          | `"PXD0632194"` accepted (7+ digits)     | pass   | Newer IDs have more digits               |
-| 3   | `test_strips_whitespace`      | `"  PXD063194  "` trimmed and accepted  | pass   | User input may have whitespace           |
-| 4   | `test_rejects_lowercase`      | `"pxd000001"` raises ValueError         | pass   | ProteomeCentral uses uppercase only      |
-| 5   | `test_rejects_no_digits`      | `"PXD"` raises ValueError               | pass   | Prefix alone is not a valid ID           |
-| 6   | `test_rejects_too_few_digits` | `"PXD123"` (3 digits) raises ValueError | pass   | Minimum 6 digits required                |
-| 7   | `test_rejects_non_pxd_prefix` | `"MSV000001"` raises ValueError         | pass   | Only PXD identifiers accepted            |
-| 8   | `test_rejects_empty`          | `""` raises ValueError                  | pass   | Empty input guard                        |
-| 9   | `test_rejects_path_traversal` | `"../etc/passwd"` raises ValueError     | pass   | Security: prevent injection via ID field |
-
----
-
-## test_cli.py (33 tests)
+## test_cli.py (32 tests)
 
 ### TestCliBasics (3)
 
@@ -156,7 +103,7 @@ CLI entry point: `--version`, `--help`, subcommand discovery.
 
 | #   | Test              | What it verifies                                            | Expect | Why                          |
 | --- | ----------------- | ----------------------------------------------------------- | ------ | ---------------------------- |
-| 1   | `test_version`    | `--version` prints `0.3.2`                                  | pass   | Version pinned to release    |
+| 1   | `test_version`    | `--version` prints `0.4.1`                                  | pass   | Version pinned to release    |
 | 2   | `test_help`       | `--help` lists `fetch`, `filter`, `lookup`                  | pass   | All subcommands discoverable |
 | 3   | `test_fetch_help` | `fetch --help` shows `--output`, `--refresh`, `--cache-dir` | pass   | CLI options documented       |
 
@@ -175,11 +122,11 @@ End-to-end CLI fetch (mocked API, real file I/O via `tmp_path`).
 
 ### TestStubs (1)
 
-Placeholder command that will be implemented in a later phase.
+Residual integration stub: confirms `lookup` with no arguments exits with an error.
 
-| #   | Test               | What it verifies                             | Expect | Why                      |
-| --- | ------------------ | -------------------------------------------- | ------ | ------------------------ |
-| 1   | `test_lookup_stub` | `lookup` exits 0, says "not yet implemented" | pass   | Graceful stub -- Phase 3 |
+| #   | Test                                   | What it verifies                    | Expect | Why                                              |
+| --- | -------------------------------------- | ----------------------------------- | ------ | ------------------------------------------------ |
+| 1   | `test_lookup_no_args_exits_with_error` | `lookup` with no IDs exits non-zero | pass   | Regression guard — full tests are in test_lookup |
 
 ### TestFilterCommand (18)
 
@@ -223,62 +170,6 @@ Parse diagnostics surfaced in CLI output.
 | #   | Test                                         | What it verifies                                        | Expect | Why                           |
 | --- | -------------------------------------------- | ------------------------------------------------------- | ------ | ----------------------------- |
 | 1   | `test_fetch_reports_no_skipped_rows_verbose` | Verbose output includes "no rows skipped" on clean data | pass   | User sees parse health status |
-
----
-
-## test_cache.py (17 tests)
-
-### TestGetCacheDir (3)
-
-Cache directory creation and resolution.
-
-| #   | Test                       | What it verifies                          | Expect | Why                                  |
-| --- | -------------------------- | ----------------------------------------- | ------ | ------------------------------------ |
-| 1   | `test_creates_dir`         | Directory created with correct name       | pass   | Cache bootstrapping                  |
-| 2   | `test_idempotent`          | Calling twice returns same path, no error | pass   | Safe to call repeatedly              |
-| 3   | `test_default_base_is_cwd` | Default base directory is CWD             | pass   | Sensible default for interactive use |
-
-### TestSaveLoad (6)
-
-DataFrame serialization to TSV + JSON metadata sidecar.
-
-| #   | Test                                 | What it verifies                             | Expect | Why                                   |
-| --- | ------------------------------------ | -------------------------------------------- | ------ | ------------------------------------- |
-| 1   | `test_roundtrip`                     | Save then load returns identical data        | pass   | Core contract: lossless roundtrip     |
-| 2   | `test_save_creates_tsv_file`         | `.tsv` file created on disk                  | pass   | Physical file existence               |
-| 3   | `test_save_creates_metadata`         | JSON sidecar has key, row count, timestamp   | pass   | Metadata used for staleness checks    |
-| 4   | `test_load_nonexistent_returns_none` | Missing key returns `None` (not crash)       | pass   | Graceful cache miss                   |
-| 5   | `test_multiple_datasets`             | Two different keys coexist in same cache dir | pass   | Cache supports multiple named entries |
-| 6   | `test_overwrite`                     | Second save to same key replaces data        | pass   | Re-download overwrites stale data     |
-
-### TestIsStale (4)
-
-Cache freshness checking.
-
-| #   | Test                      | What it verifies                              | Expect | Why                                |
-| --- | ------------------------- | --------------------------------------------- | ------ | ---------------------------------- |
-| 1   | `test_missing_is_stale`   | Non-existent entry is always stale            | pass   | Triggers a fresh download          |
-| 2   | `test_fresh_is_not_stale` | Just-saved entry is fresh                     | pass   | Recent cache should be used        |
-| 3   | `test_old_is_stale`       | Entry backdated 48h is stale at 24h threshold | pass   | Expired cache triggers re-download |
-| 4   | `test_custom_max_age`     | High `max_age_hours` keeps data fresh         | pass   | Configurable staleness window      |
-
-### TestCacheInfo (2)
-
-Cache metadata inspection.
-
-| #   | Test               | What it verifies                         | Expect | Why                           |
-| --- | ------------------ | ---------------------------------------- | ------ | ----------------------------- |
-| 1   | `test_existing`    | Returns dict with `rows` and `timestamp` | pass   | Users can inspect cache state |
-| 2   | `test_nonexistent` | Returns `None` for unknown key           | pass   | Graceful handling             |
-
-### TestCorruptedMetadata (2)
-
-Recovery from corrupted JSON metadata files.
-
-| #   | Test                                  | What it verifies                                          | Expect | Why                             |
-| --- | ------------------------------------- | --------------------------------------------------------- | ------ | ------------------------------- |
-| 1   | `test_corrupted_json_returns_empty`   | Corrupted JSON → load returns None, is_stale returns True | pass   | Silent recovery from corruption |
-| 2   | `test_save_overwrites_corrupted_json` | Saving after corruption overwrites with valid JSON        | pass   | Self-healing on next write      |
 
 ---
 
@@ -388,15 +279,257 @@ Boundary conditions: empty DataFrames, special characters, strict date format.
 
 ---
 
+## test_api.py (31 tests)
+
+### TestSession (2)
+
+HTTP session construction and headers.
+
+| #   | Test                            | What it verifies                          | Expect | Why                                  |
+| --- | ------------------------------- | ----------------------------------------- | ------ | ------------------------------------ |
+| 1   | `test_user_agent_set`           | `User-Agent` header is set on the session | pass   | Polite scraping — identify ourselves |
+| 2   | `test_returns_session_instance` | Returns a `requests.Session` object       | pass   | API contract for callers             |
+
+### TestFetchSummary (3)
+
+Bulk TSV download from ProteomeCentral.
+
+| #   | Test                               | What it verifies                         | Expect | Why                              |
+| --- | ---------------------------------- | ---------------------------------------- | ------ | -------------------------------- |
+| 1   | `test_returns_text`                | Returns raw TSV string on success        | pass   | Core contract                    |
+| 2   | `test_raises_on_http_error`        | HTTP 4xx/5xx raises `requests.HTTPError` | pass   | Caller can handle network errors |
+| 3   | `test_creates_own_session_if_none` | Works without a pre-built session        | pass   | Convenience: no session required |
+
+### TestFetchDatasetXml (7)
+
+Per-dataset XML download from the ProteomeCentral API.
+
+| #   | Test                              | What it verifies                               | Expect | Why                                 |
+| --- | --------------------------------- | ---------------------------------------------- | ------ | ----------------------------------- |
+| 1   | `test_returns_xml`                | Returns XML string for valid PXD ID            | pass   | Core contract                       |
+| 2   | `test_applies_delay`              | Sleeps for `delay` seconds between calls       | pass   | Polite rate-limiting                |
+| 3   | `test_no_delay_when_zero`         | No sleep when `delay=0`                        | pass   | Tests and scripts can disable delay |
+| 4   | `test_raises_on_http_error`       | HTTP error raises `requests.HTTPError`         | pass   | Caller can isolate per-ID failures  |
+| 5   | `test_rejects_invalid_dataset_id` | Raises `ValueError` for non-PXD strings        | pass   | Validation before any network call  |
+| 6   | `test_rejects_empty_dataset_id`   | Raises `ValueError` for empty string           | pass   | Guard against accidental blank IDs  |
+| 7   | `test_rejects_partial_pxd_id`     | Raises `ValueError` for `"PXD"` with no digits | pass   | Pattern must have 6+ digits         |
+
+### TestFetchDatasetsXml (10)
+
+Batch XML downloader — validates all IDs upfront, isolates per-ID errors.
+
+| #   | Test                                        | What it verifies                                     | Expect | Why                                              |
+| --- | ------------------------------------------- | ---------------------------------------------------- | ------ | ------------------------------------------------ |
+| 1   | `test_returns_dict_of_xml`                  | Single ID returns `{id: xml_string}` dict            | pass   | Core contract for lookup command                 |
+| 2   | `test_multiple_ids`                         | Multiple IDs all returned in one dict                | pass   | Batch fetching works                             |
+| 3   | `test_empty_list_returns_empty_dict`        | Empty input → empty dict, no requests made           | pass   | No-op for empty input                            |
+| 4   | `test_invalid_id_raises_before_any_request` | `ValueError` raised before any HTTP call on bad ID   | pass   | Fail-fast validation                             |
+| 5   | `test_per_id_http_error_stores_none`        | HTTP error for one ID → `{id: None}`, others succeed | pass   | Per-ID error isolation                           |
+| 6   | `test_per_id_connection_error_stores_none`  | Connection error for one ID → `{id: None}`           | pass   | Network failures don't abort the whole batch     |
+| 7   | `test_all_fail_returns_all_none`            | All IDs fail → dict with all values `None`           | pass   | Full-failure case handled gracefully             |
+| 8   | `test_keyboard_interrupt_returns_partial`   | Ctrl-C mid-batch returns partial results so far      | pass   | User can interrupt long runs without losing data |
+| 9   | `test_delay_is_passed_through`              | `delay` kwarg forwarded to `fetch_dataset_xml()`     | pass   | Polite rate-limiting respected in batch          |
+| 10  | `test_creates_own_session_if_none`          | Works without a pre-built session                    | pass   | Convenience: no session plumbing required        |
+
+### TestValidatePxdId (9)
+
+PXD ID validation used across all modules.
+
+| #   | Test                          | What it verifies                             | Expect | Why                                          |
+| --- | ----------------------------- | -------------------------------------------- | ------ | -------------------------------------------- |
+| 1   | `test_valid_six_digit`        | `PXD000001` accepted                         | pass   | Standard format                              |
+| 2   | `test_valid_long_id`          | IDs with >6 digits accepted                  | pass   | New high-numbered datasets have longer IDs   |
+| 3   | `test_strips_whitespace`      | Leading/trailing spaces removed before check | pass   | Forgiving input from files and CLI           |
+| 4   | `test_rejects_lowercase`      | `pxd000001` rejected                         | pass   | IDs are case-sensitive uppercase             |
+| 5   | `test_rejects_no_digits`      | `"PXD"` rejected                             | pass   | Prefix alone is invalid                      |
+| 6   | `test_rejects_too_few_digits` | `"PXD1234"` (5 digits) rejected              | pass   | Must have 6+ digits                          |
+| 7   | `test_rejects_non_pxd_prefix` | `"MSV000001"` rejected                       | pass   | Only PXD namespace accepted                  |
+| 8   | `test_rejects_empty`          | Empty string raises `ValueError`             | pass   | Guard against blank input                    |
+| 9   | `test_rejects_path_traversal` | `"../etc/passwd"` raises `ValueError`        | pass   | Security: no path traversal in ID validation |
+
+---
+
+## test_cache.py (28 tests)
+
+### TestGetCacheDir (3)
+
+Cache directory creation and resolution.
+
+| #   | Test                       | What it verifies                          | Expect | Why                                  |
+| --- | -------------------------- | ----------------------------------------- | ------ | ------------------------------------ |
+| 1   | `test_creates_dir`         | Directory created with correct name       | pass   | Cache bootstrapping                  |
+| 2   | `test_idempotent`          | Calling twice returns same path, no error | pass   | Safe to call repeatedly              |
+| 3   | `test_default_base_is_cwd` | Default base directory is CWD             | pass   | Sensible default for interactive use |
+
+### TestSaveLoad (6)
+
+DataFrame serialization to TSV + JSON metadata sidecar.
+
+| #   | Test                                 | What it verifies                             | Expect | Why                                   |
+| --- | ------------------------------------ | -------------------------------------------- | ------ | ------------------------------------- |
+| 1   | `test_roundtrip`                     | Save then load returns identical data        | pass   | Core contract: lossless roundtrip     |
+| 2   | `test_save_creates_tsv_file`         | `.tsv` file created on disk                  | pass   | Physical file existence               |
+| 3   | `test_save_creates_metadata`         | JSON sidecar has key, row count, timestamp   | pass   | Metadata used for staleness checks    |
+| 4   | `test_load_nonexistent_returns_none` | Missing key returns `None` (not crash)       | pass   | Graceful cache miss                   |
+| 5   | `test_multiple_datasets`             | Two different keys coexist in same cache dir | pass   | Cache supports multiple named entries |
+| 6   | `test_overwrite`                     | Second save to same key replaces data        | pass   | Re-download overwrites stale data     |
+
+### TestIsStale (4)
+
+Cache freshness checking.
+
+| #   | Test                      | What it verifies                              | Expect | Why                                |
+| --- | ------------------------- | --------------------------------------------- | ------ | ---------------------------------- |
+| 1   | `test_missing_is_stale`   | Non-existent entry is always stale            | pass   | Triggers a fresh download          |
+| 2   | `test_fresh_is_not_stale` | Just-saved entry is fresh                     | pass   | Recent cache should be used        |
+| 3   | `test_old_is_stale`       | Entry backdated 48h is stale at 24h threshold | pass   | Expired cache triggers re-download |
+| 4   | `test_custom_max_age`     | High `max_age_hours` keeps data fresh         | pass   | Configurable staleness window      |
+
+### TestCacheInfo (2)
+
+Cache metadata inspection.
+
+| #   | Test               | What it verifies                         | Expect | Why                           |
+| --- | ------------------ | ---------------------------------------- | ------ | ----------------------------- |
+| 1   | `test_existing`    | Returns dict with `rows` and `timestamp` | pass   | Users can inspect cache state |
+| 2   | `test_nonexistent` | Returns `None` for unknown key           | pass   | Graceful handling             |
+
+### TestCorruptedMetadata (2)
+
+Recovery from corrupted JSON metadata files.
+
+| #   | Test                                  | What it verifies                                          | Expect | Why                             |
+| --- | ------------------------------------- | --------------------------------------------------------- | ------ | ------------------------------- |
+| 1   | `test_corrupted_json_returns_empty`   | Corrupted JSON → load returns None, is_stale returns True | pass   | Silent recovery from corruption |
+| 2   | `test_save_overwrites_corrupted_json` | Saving after corruption overwrites with valid JSON        | pass   | Self-healing on next write      |
+
+### TestXmlCache (11)
+
+Per-dataset XML file cache (added v0.4.0). Immutable once written; never expires.
+
+| #   | Test                                    | What it verifies                                         | Expect | Why                                            |
+| --- | --------------------------------------- | -------------------------------------------------------- | ------ | ---------------------------------------------- |
+| 1   | `test_save_creates_xml_file`            | `PXD000001.xml` file created in cache dir                | pass   | Core write contract                            |
+| 2   | `test_load_returns_saved_content`       | Loaded XML matches saved string exactly                  | pass   | Lossless round-trip                            |
+| 3   | `test_load_nonexistent_returns_none`    | Missing ID returns `None`, no exception                  | pass   | Graceful cache miss                            |
+| 4   | `test_is_xml_cached_true_after_save`    | `True` immediately after save                            | pass   | Freshness check used by lookup command         |
+| 5   | `test_is_xml_cached_false_when_missing` | `False` for IDs not yet fetched                          | pass   | Drives which IDs to fetch from API             |
+| 6   | `test_save_overwrites_existing`         | Second save replaces content                             | pass   | Allows manual re-fetch by deleting cache file  |
+| 7   | `test_multiple_ids_are_independent`     | Two IDs stored in separate files, no cross-contamination | pass   | Each PXD gets its own file                     |
+| 8   | `test_invalid_id_raises_on_save`        | `ValueError` on `save_xml("BADID", ...)`                 | pass   | Consistent ID validation across all operations |
+| 9   | `test_invalid_id_raises_on_load`        | `ValueError` on `load_xml("BADID")`                      | pass   | Same                                           |
+| 10  | `test_invalid_id_raises_on_is_cached`   | `ValueError` on `is_xml_cached("BADID")`                 | pass   | Same                                           |
+| 11  | `test_xml_and_tsv_coexist`              | XML cache files coexist with TSV summary cache           | pass   | Both cache types share one directory           |
+
+---
+
+## test_lookup.py (27 tests)
+
+Integration tests for the `pxscraper lookup` CLI command. All HTTP calls are mocked; no network required.
+
+### TestLookupHappyPath (8)
+
+End-to-end success scenarios.
+
+| #   | Test                               | What it verifies                                    | Expect | Why                                                           |
+| --- | ---------------------------------- | --------------------------------------------------- | ------ | ------------------------------------------------------------- |
+| 1   | `test_single_id_via_flag`          | `--ids PXD000001 --yes` writes 1-row TSV            | pass   | Core use case                                                 |
+| 2   | `test_multiple_ids_via_flag`       | `--ids PXD000001,PXD000002` writes 2-row TSV        | pass   | Comma-separated IDs work                                      |
+| 3   | `test_ids_file`                    | `--ids-file ids.txt` reads IDs from file            | pass   | File input mode                                               |
+| 4   | `test_input_tsv_pipeline`          | `--input filtered.tsv` reads IDs from filter output | pass   | Filter → lookup pipeline                                      |
+| 5   | `test_ids_combined_with_ids_file`  | `--ids` + `--ids-file` merged and deduplicated      | pass   | Sources are unioned; duplicates removed                       |
+| 6   | `test_output_has_expected_columns` | Output TSV has all 19 expected columns              | pass   | Schema contract for downstream tools                          |
+| 7   | `test_default_output_filename`     | Without `-o`, writes `lookup_results.tsv` to CWD    | pass   | Sensible default output name                                  |
+| 8   | `test_ftp_location_populated`      | `ftp_location` in output contains the dataset ID    | pass   | FTP path correctly extracted from XML (regression for Bug B3) |
+
+### TestLookupConfirmation (4)
+
+Confirmation prompt fires only for large batches (>50 IDs by default).
+
+| #   | Test                                            | What it verifies                                                    | Expect | Why                                                        |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| 1   | `test_yes_flag_skips_prompt`                    | `--yes` completes without any prompt                                | pass   | Script-friendly flag                                       |
+| 2   | `test_small_batch_needs_no_yes_flag`            | ≤50 IDs succeeds without `--yes`                                    | pass   | Single lookup should not require confirmation (Bug B2 fix) |
+| 3   | `test_large_batch_triggers_confirmation_prompt` | >threshold IDs prompts; answering 'n' aborts without writing output | pass   | Protects against accidental large fetches                  |
+| 4   | `test_prompt_abort_exits_cleanly`               | Aborting prompt leaves no output file and makes no API call         | pass   | Clean abort behaviour                                      |
+
+### TestLookupCache (3)
+
+Cache integration with the lookup command.
+
+| #   | Test                                      | What it verifies                                       | Expect | Why                            |
+| --- | ----------------------------------------- | ------------------------------------------------------ | ------ | ------------------------------ |
+| 1   | `test_cache_hit_skips_fetch`              | Pre-cached ID is not fetched from API                  | pass   | Avoids redundant network calls |
+| 2   | `test_partial_cache_fetches_only_missing` | Cached IDs served from disk; only uncached IDs fetched | pass   | Efficient partial-hit handling |
+| 3   | `test_fetched_xml_is_cached`              | After successful lookup, XML is written to cache dir   | pass   | Subsequent runs are faster     |
+
+### TestLookupErrors (9)
+
+Error conditions and partial-failure handling.
+
+| #   | Test                                          | What it verifies                                                   | Expect | Why                                      |
+| --- | --------------------------------------------- | ------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| 1   | `test_no_ids_given_exits_with_error`          | No source of IDs → non-zero exit with "No PXD IDs" message         | pass   | User sees a clear error, not a traceback |
+| 2   | `test_invalid_id_exits_with_error`            | Invalid ID (e.g. `NOTANID`) → non-zero exit with "Invalid" message | pass   | ID validation fires before any API call  |
+| 3   | `test_mixed_valid_invalid_ids_exits`          | Mix of valid and invalid → exits, bad ID named in output           | pass   | User knows which ID was rejected         |
+| 4   | `test_input_tsv_missing_dataset_id_column`    | TSV without `dataset_id` column → non-zero exit with column name   | pass   | Friendly error for wrong input file      |
+| 5   | `test_all_fetches_fail_exits_with_error`      | All IDs return `None` → non-zero exit with summary message         | pass   | Total failure surfaced explicitly        |
+| 6   | `test_partial_failure_writes_successful_rows` | Some IDs fail → successful rows written, warning printed           | pass   | Partial success is still useful          |
+| 7   | `test_connection_error_exits_friendly`        | `requests.ConnectionError` → friendly message, non-zero exit       | pass   | No raw tracebacks for network problems   |
+| 8   | `test_timeout_error_exits_friendly`           | `requests.Timeout` → "timed out" in output                         | pass   | Explicit timeout feedback                |
+| 9   | `test_duplicate_ids_deduplication`            | Same ID in `--ids` twice → API called with it only once            | pass   | Deduplication before fetch               |
+
+### TestLookupDelay (1)
+
+| #   | Test                         | What it verifies                                  | Expect | Why                            |
+| --- | ---------------------------- | ------------------------------------------------- | ------ | ------------------------------ |
+| 1   | `test_delay_passed_to_fetch` | `--delay 0.5` forwarded to `fetch_datasets_xml()` | pass   | Rate-limit configuration works |
+
+### TestLookupVerbose (1)
+
+| #   | Test                              | What it verifies                             | Expect | Why                                    |
+| --- | --------------------------------- | -------------------------------------------- | ------ | -------------------------------------- |
+| 1   | `test_verbose_reports_cache_hits` | `-v` output mentions "cached" when cache hit | pass   | User can see which IDs came from cache |
+
+### TestLookupHelp (1)
+
+| #   | Test                                 | What it verifies                                      | Expect | Why                            |
+| --- | ------------------------------------ | ----------------------------------------------------- | ------ | ------------------------------ |
+| 1   | `test_lookup_help_shows_all_options` | `--help` lists all flags: `--ids`, `--ids-file`, etc. | pass   | Documentation via CLI contract |
+
+---
+
+## test_parse.py — TestParseDatasetXmlNamespace (12, added v0.4.1)
+
+Regression tests confirming `parse_dataset_xml()` correctly extracts every field when the XML document declares a default namespace (`xmlns="http://proteomexchange.org/schema"`). Each test parses `SAMPLE_XML_WITH_NS` and checks one output key. These tests caught Bug B1 (namespace-unaware XPath in lxml).
+
+| #   | Test                               | What it verifies                                                   | Expect | Why                                                |
+| --- | ---------------------------------- | ------------------------------------------------------------------ | ------ | -------------------------------------------------- |
+| 1   | `test_title_populated`             | `title` non-empty when XML has `xmlns=`                            | pass   | DatasetSummary/@title not reachable without fix    |
+| 2   | `test_description_populated`       | `description` non-empty                                            | pass   | Description text content silently blank before fix |
+| 3   | `test_announce_date_populated`     | `announce_date` non-empty                                          | pass   | DatasetSummary/@announceDate                       |
+| 4   | `test_repository_populated`        | `repository` non-empty                                             | pass   | DatasetSummary/@hostingRepository                  |
+| 5   | `test_species_populated`           | `species` non-empty                                                | pass   | SpeciesList xpath fails without namespace strip    |
+| 6   | `test_instruments_populated`       | `instruments` non-empty                                            | pass   | InstrumentList xpath idem                          |
+| 7   | `test_review_level_populated`      | `review_level` non-empty                                           | pass   | ReviewLevel xpath idem                             |
+| 8   | `test_keywords_populated`          | `keywords` non-empty                                               | pass   | KeywordList xpath idem                             |
+| 9   | `test_submitter_contact_populated` | `submitter_name` non-empty                                         | pass   | ContactList xpath idem                             |
+| 10  | `test_pubmed_populated`            | `pubmed_ids` non-empty                                             | pass   | PublicationList xpath idem                         |
+| 11  | `test_ftp_location_populated`      | `ftp_location` non-empty                                           | pass   | FullDatasetLinkList xpath idem                     |
+| 12  | `test_dataset_id_always_works`     | `dataset_id` populated even without namespace fix (root attribute) | pass   | Baseline: root `id` attribute unaffected by xmlns  |
+
+---
+
 ## Summary
 
 | Module         |   Tests | All pass | Skipped | Expected failures |
 | -------------- | ------: | :------: | :-----: | :---------------: |
-| test_parse.py  |      45 |   yes    |    0    |         0         |
+| test_parse.py  |      57 |   yes    |    0    |         0         |
 | test_filter.py |      53 |   yes    |    0    |         0         |
-| test_api.py    |      21 |   yes    |    0    |         0         |
-| test_cli.py    |      33 |   yes    |    0    |         0         |
-| test_cache.py  |      17 |   yes    |    0    |         0         |
-| **Total**      | **168** | **yes**  |  **0**  |       **0**       |
+| test_api.py    |      31 |   yes    |    0    |         0         |
+| test_cli.py    |      32 |   yes    |    0    |         0         |
+| test_cache.py  |      28 |   yes    |    0    |         0         |
+| test_lookup.py |      27 |   yes    |    0    |         0         |
+| **Total**      | **228** | **yes**  |  **0**  |       **0**       |
 
 All tests are deterministic, offline (mocked HTTP), and use `tmp_path` for I/O — no network calls, no side effects.
