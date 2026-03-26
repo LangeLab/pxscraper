@@ -536,3 +536,225 @@ class TestFetchDiagnostics:
 
         assert result.exit_code == 0
         assert "no rows skipped" in result.output.lower()
+
+
+# ---------------------------------------------------------------------------
+# filter --deep (XML description search)
+# ---------------------------------------------------------------------------
+
+_DEEP_XML = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<ProteomeXchangeDataset id="{dataset_id}" xmlns="http://proteomexchange.org/schema"
+    formatVersion="1.4.0">
+  <DatasetSummary title="Test title {dataset_id}" announceDate="2025-01-01"
+      hostingRepository="PRIDE">
+    <Description>{description}</Description>
+  </DatasetSummary>
+  <ReviewLevel>
+    <cvParam accession="PRIDE:0000414" name="Peer-reviewed dataset" />
+  </ReviewLevel>
+  <SpeciesList><Species>
+    <cvParam accession="MS:1001207" name="taxonomy: scientific name"
+             value="Homo sapiens" />
+  </Species></SpeciesList>
+  <InstrumentList><Instrument id="1">
+    <cvParam accession="MS:1001742" name="LTQ Orbitrap Velos" />
+  </Instrument></InstrumentList>
+  <ModificationList>
+    <cvParam accession="MOD:00696" name="phosphorylated residue" />
+  </ModificationList>
+  <KeywordList>
+    <cvParam accession="PRIDE:0000428" name="submitter keyword" value="test" />
+  </KeywordList>
+  <ContactList>
+    <Contact id="project_submitter">
+      <cvParam accession="MS:1000586" name="contact name" value="Jane Doe" />
+    </Contact>
+    <Contact id="project_lab_head">
+      <cvParam accession="MS:1000586" name="contact name" value="John Smith" />
+    </Contact>
+  </ContactList>
+  <PublicationList>
+    <Publication id="p1">
+      <cvParam accession="MS:1000879" name="PubMed identifier" value="12345678" />
+    </Publication>
+  </PublicationList>
+  <FullDatasetLinkList><FullDatasetLink>
+    <cvParam accession="MS:1002852" name="Dataset FTP location"
+             value="ftp://ftp.pride.ebi.ac.uk/pride/data/archive/{dataset_id}" />
+  </FullDatasetLink></FullDatasetLinkList>
+</ProteomeXchangeDataset>
+"""
+
+_DEEP_INPUT_TSV = (
+    "dataset_id\ttitle\trepository\tspecies\tinstrument\t"
+    "publication\tlab_head\tannounce_date\tkeywords\n"
+    "PXD000001\tTest title\tPRIDE\tHomo sapiens\tOrbitrap\tno pub\tJ Doe\t2025-01-01\ttest,\n"
+    "PXD000002\tAnother title\tMassIVE\tMus musculus\tQ Exactive\tno pub\tA Smith\t2025-02-01\tmouse,\n"
+)
+
+
+class TestFilterDeep:
+    """Tests for filter --deep (XML description search)."""
+
+    def _xml(self, dataset_id, description):
+        return _DEEP_XML.format(dataset_id=dataset_id, description=description)
+
+    def _write_input(self, tmp_path):
+        p = tmp_path / "input.tsv"
+        p.write_text(_DEEP_INPUT_TSV)
+        return p
+
+    def test_deep_finds_description_only_match(self, tmp_path):
+        """Keyword absent from title/keywords but present in description is matched."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": self._xml("PXD000001", "A phosphoproteomics investigation."),
+            "PXD000002": self._xml("PXD000002", "A lipidomics study in mice."),
+        }
+
+        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep", "--yes"],
+            )
+
+        assert result.exit_code == 0, result.output
+        df = pd.read_csv(output_file, sep="\t")
+        assert list(df["dataset_id"]) == ["PXD000001"]
+
+    def test_deep_no_match_excluded(self, tmp_path):
+        """Dataset not matching keyword in any field is excluded."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": self._xml("PXD000001", "No target term here."),
+            "PXD000002": self._xml("PXD000002", "Also no target term."),
+        }
+
+        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "zyxabsent", "--deep", "--yes"],
+            )
+
+        assert result.exit_code == 0, result.output
+        assert "No datasets matched" in result.output
+
+    def test_deep_requires_keywords(self, tmp_path):
+        """--deep without -k exits with a friendly error."""
+        input_file = self._write_input(tmp_path)
+        result = CliRunner().invoke(
+            main,
+            ["filter", "-i", str(input_file), "--deep"],
+        )
+        assert result.exit_code != 0
+        assert "requires" in result.output.lower()
+
+    def test_deep_output_has_description_column(self, tmp_path):
+        """Output TSV includes a 'description' column when --deep is used."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": self._xml("PXD000001", "A phosphoproteomics investigation."),
+            "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
+        }
+
+        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep", "--yes"],
+            )
+
+        assert result.exit_code == 0, result.output
+        df = pd.read_csv(output_file, sep="\t")
+        assert "description" in df.columns
+
+    def test_deep_uses_xml_cache(self, tmp_path):
+        """Pre-cached XML is used without making network requests."""
+        from pxscraper import cache
+
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        cdir = cache.get_cache_dir(tmp_path / "cache")
+        cache.save_xml("PXD000001", self._xml("PXD000001", "A phosphoproteomics study."), cache_dir=cdir)
+        cache.save_xml("PXD000002", self._xml("PXD000002", "A lipidomics study."), cache_dir=cdir)
+
+        with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep"],
+            )
+
+        assert result.exit_code == 0, result.output
+        mock_fetch.assert_not_called()
+
+    def test_deep_yes_skips_prompt(self, tmp_path):
+        """--yes bypasses the large-batch confirmation prompt."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": self._xml("PXD000001", "A phosphoproteomics study."),
+            "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
+        }
+
+        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map), \
+                patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep", "--yes"],
+            )
+
+        assert result.exit_code == 0, result.output
+
+    def test_deep_large_set_without_yes_prompts(self, tmp_path):
+        """A large candidate set triggers a confirmation prompt without --yes."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": self._xml("PXD000001", "A phosphoproteomics study."),
+            "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
+        }
+
+        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map), \
+                patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep"],
+                input="n\n",
+            )
+
+        assert result.exit_code != 0
+
+    def test_deep_connection_error_exits_friendly(self, tmp_path):
+        """A network error during XML fetch shows a friendly error and no output file."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+
+        with patch(
+            "pxscraper.api.fetch_datasets_xml",
+            side_effect=requests.ConnectionError("network down"),
+        ):
+            result = CliRunner().invoke(
+                main,
+                ["filter", "-i", str(input_file), "-o", str(output_file),
+                 "--cache-dir", str(tmp_path / "cache"),
+                 "-k", "phosphoproteomics", "--deep", "--yes"],
+            )
+
+        assert result.exit_code != 0
+        assert "Could not reach ProteomeCentral" in result.output
+        assert not output_file.exists()
