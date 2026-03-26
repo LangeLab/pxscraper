@@ -1,1 +1,1 @@
-"""Shared test fixtures for pxscraper."""
+"""Shared test fixtures for pxseek."""

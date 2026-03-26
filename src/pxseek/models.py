@@ -2,7 +2,7 @@
 
 import re
 
-from pxscraper import __version__
+from pxseek import __version__
 
 # Raw TSV header → clean column name mapping
 RAW_TO_CLEAN_COLUMNS = {
@@ -23,7 +23,7 @@ DROP_COLUMNS = ["announcementXML"]
 SUMMARY_COLUMNS = list(RAW_TO_CLEAN_COLUMNS.values())
 
 # Default cache directory name (created in the current working directory)
-CACHE_DIR_NAME = ".pxscraper_cache"
+CACHE_DIR_NAME = ".pxseek_cache"
 
 # Cache metadata filename
 CACHE_META_FILE = "_metadata.json"
@@ -39,8 +39,8 @@ LOOKUP_CONFIRM_THRESHOLD = 50
 
 # User-Agent string for API requests
 USER_AGENT = (
-    f"pxscraper/{__version__}"
-    " (https://github.com/LangeLab/pxscraper; academic research tool)"
+    f"pxseek/{__version__}"
+    " (https://github.com/LangeLab/pxseek; academic research tool)"
 )
 
 # HTTP timeout in seconds

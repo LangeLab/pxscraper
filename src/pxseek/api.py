@@ -5,7 +5,7 @@ import time
 
 import requests
 
-from pxscraper.models import HTTP_TIMEOUT, USER_AGENT, XML_REQUEST_DELAY, validate_pxd_id
+from pxseek.models import HTTP_TIMEOUT, USER_AGENT, XML_REQUEST_DELAY, validate_pxd_id
 
 log = logging.getLogger(__name__)
 

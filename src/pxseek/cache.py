@@ -1,6 +1,6 @@
 """Local caching of fetched data.
 
-Cache is stored in `.pxscraper_cache/` in the current working directory
+Cache is stored in `.pxseek_cache/` in the current working directory
 so users can see and manage it directly. The directory is gitignored.
 """
 
@@ -10,13 +10,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from pxscraper.models import CACHE_DIR_NAME, CACHE_META_FILE, DEFAULT_CACHE_MAX_AGE_HOURS
+from pxseek.models import CACHE_DIR_NAME, CACHE_META_FILE, DEFAULT_CACHE_MAX_AGE_HOURS
 
 
 def get_cache_dir(base: Path | None = None) -> Path:
     """Return the cache directory path, creating it if needed.
 
-    By default, uses `.pxscraper_cache/` in the current working directory.
+    By default, uses `.pxseek_cache/` in the current working directory.
     """
     base = base or Path.cwd()
     cache_dir = base / CACHE_DIR_NAME
@@ -98,7 +98,7 @@ def save_xml(dataset_id: str, raw_xml: str, cache_dir: Path | None = None) -> Pa
 
     ProteomeXchange XML is immutable once published, so no TTL is tracked.
     """
-    from pxscraper.models import validate_pxd_id
+    from pxseek.models import validate_pxd_id
 
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()
@@ -109,7 +109,7 @@ def save_xml(dataset_id: str, raw_xml: str, cache_dir: Path | None = None) -> Pa
 
 def load_xml(dataset_id: str, cache_dir: Path | None = None) -> str | None:
     """Return cached XML for *dataset_id*, or ``None`` if not cached."""
-    from pxscraper.models import validate_pxd_id
+    from pxseek.models import validate_pxd_id
 
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()
@@ -121,7 +121,7 @@ def load_xml(dataset_id: str, cache_dir: Path | None = None) -> str | None:
 
 def is_xml_cached(dataset_id: str, cache_dir: Path | None = None) -> bool:
     """Return ``True`` if an XML file for *dataset_id* exists on disk."""
-    from pxscraper.models import validate_pxd_id
+    from pxseek.models import validate_pxd_id
 
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()

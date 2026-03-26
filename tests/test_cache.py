@@ -1,4 +1,4 @@
-"""Tests for pxscraper.cache module."""
+"""Tests for pxseek.cache module."""
 
 import json
 import time
@@ -6,7 +6,7 @@ import time
 import pandas as pd
 import pytest
 
-from pxscraper.cache import (
+from pxseek.cache import (
     cache_info,
     get_cache_dir,
     is_stale,
@@ -16,7 +16,7 @@ from pxscraper.cache import (
     save,
     save_xml,
 )
-from pxscraper.models import CACHE_DIR_NAME, CACHE_META_FILE
+from pxseek.models import CACHE_DIR_NAME, CACHE_META_FILE
 
 
 @pytest.fixture()

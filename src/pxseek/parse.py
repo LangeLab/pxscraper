@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 from lxml import etree
 
-from pxscraper.models import DROP_COLUMNS, RAW_TO_CLEAN_COLUMNS
+from pxseek.models import DROP_COLUMNS, RAW_TO_CLEAN_COLUMNS
 
 # Regex to strip HTML tags but keep inner text
 _HTML_TAG_RE = re.compile(r"<[^>]+>")

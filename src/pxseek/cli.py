@@ -1,4 +1,4 @@
-"""CLI entry point for pxscraper."""
+"""CLI entry point for pxseek."""
 
 import re
 from datetime import datetime
@@ -6,14 +6,14 @@ from pathlib import Path
 
 import click
 
-from pxscraper import __version__
+from pxseek import __version__
 
 
 def _fetch_summary_safe(verbose=False):
     """Fetch summary TSV from ProteomeCentral with friendly error handling."""
     import requests
 
-    from pxscraper import api
+    from pxseek import api
 
     try:
         if verbose:
@@ -32,7 +32,7 @@ def _fetch_summary_safe(verbose=False):
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="pxscraper")
+@click.version_option(version=__version__, prog_name="pxseek")
 def main():
     """Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange."""
 
@@ -43,13 +43,13 @@ def main():
     "--cache-dir",
     default=None,
     type=click.Path(),
-    help="Cache directory [default: .pxscraper_cache/ in cwd].",
+    help="Cache directory [default: .pxseek_cache/ in cwd].",
 )
 @click.option("--refresh", is_flag=True, help="Force re-download even if cached.")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 def fetch(output, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
-    from pxscraper import cache, parse
+    from pxseek import cache, parse
 
     cache_base = Path(cache_dir) if cache_dir else None
     cdir = cache.get_cache_dir(cache_base)
@@ -118,7 +118,7 @@ def fetch(output, cache_dir, refresh, verbose):
     "--cache-dir",
     default=None,
     type=click.Path(),
-    help="Cache directory [default: .pxscraper_cache/ in cwd].",
+    help="Cache directory [default: .pxseek_cache/ in cwd].",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 @click.option("--deep", is_flag=True, help="Also search within dataset descriptions (fetches XML).")
@@ -130,8 +130,8 @@ def fetch(output, cache_dir, refresh, verbose):
 def filter(input_file, output, species, repo, keywords, after, before,
            instrument, keyword_columns, cache_dir, verbose, deep, yes, delay):
     """Filter ProteomeXchange datasets by species, repo, keywords, dates, etc."""
-    from pxscraper import cache, parse
-    from pxscraper import filter as filt
+    from pxseek import cache, parse
+    from pxseek import filter as filt
 
     # --- Validate user-supplied regex patterns ---
     for name, pattern in [("species", species), ("instrument", instrument)]:
@@ -218,8 +218,8 @@ def filter(input_file, output, species, repo, keywords, after, before,
         # Phase 2: fetch XML descriptions for all candidates
         import requests
 
-        from pxscraper import api
-        from pxscraper.models import LOOKUP_CONFIRM_THRESHOLD
+        from pxseek import api
+        from pxseek.models import LOOKUP_CONFIRM_THRESHOLD
 
         cdir = cache.get_cache_dir(Path(cache_dir) if cache_dir else None)
         if "dataset_id" not in candidates_df.columns:
@@ -322,7 +322,7 @@ def filter(input_file, output, species, repo, keywords, after, before,
 )
 @click.option(
     "--cache-dir", default=None, type=click.Path(),
-    help="Cache directory [default: .pxscraper_cache/ in cwd].",
+    help="Cache directory [default: .pxseek_cache/ in cwd].",
 )
 @click.option(
     "--yes", "-y", is_flag=True,
@@ -334,8 +334,8 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     import pandas as pd
     import requests
 
-    from pxscraper import api, cache, parse
-    from pxscraper.models import validate_pxd_id, LOOKUP_CONFIRM_THRESHOLD
+    from pxseek import api, cache, parse
+    from pxseek.models import validate_pxd_id, LOOKUP_CONFIRM_THRESHOLD
 
     # ------------------------------------------------------------------ #
     # 1. Collect IDs from all sources                                      #

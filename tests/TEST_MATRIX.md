@@ -1,4 +1,4 @@
-# pxscraper Test Matrix
+# pxseek Test Matrix
 
 > **228 tests** across 6 modules | v0.4.1 | Python 3.12+
 
@@ -440,7 +440,7 @@ Per-dataset XML file cache (added v0.4.0). Immutable once written; never expires
 
 ## test_lookup.py (27 tests)
 
-Integration tests for the `pxscraper lookup` CLI command. All HTTP calls are mocked; no network required.
+Integration tests for the `pxseek lookup` CLI command. All HTTP calls are mocked; no network required.
 
 ### TestLookupHappyPath (8)
 

@@ -1,5 +1,5 @@
 [project]
-name = "pxscraper"
+name = "pxseek"
 version = "0.4.2"
 description = "Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange"
 readme = "README.md"
@@ -29,14 +29,14 @@ rich = ["rich>=13.0"]
 dev = ["pytest>=7.0", "pytest-cov", "ruff"]
 
 [project.scripts]
-pxscraper = "pxscraper.cli:main"
+pxseek = "pxseek.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pxscraper"]
+packages = ["src/pxseek"]
 
 [tool.ruff]
 target-version = "py312"

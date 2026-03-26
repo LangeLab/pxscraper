@@ -1,9 +1,9 @@
-"""Tests for pxscraper.filter module."""
+"""Tests for pxseek.filter module."""
 
 import pandas as pd
 import pytest
 
-from pxscraper.filter import (
+from pxseek.filter import (
     apply_filters,
     by_date_range,
     by_instrument,

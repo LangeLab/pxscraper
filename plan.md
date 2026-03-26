@@ -1,4 +1,4 @@
-# pxscraper — Development Plan
+# pxseek — Development Plan
 
 > Previous analysis archived in `initial-look.md`.
 
@@ -27,8 +27,8 @@ Disabled (billing issue). Workflow file: `.github/workflows/ci.yml.disabled`.
 
 ### Validated (live)
 
-- `pxscraper fetch` retrieves ~50,848 datasets in one HTTP request
-- `pxscraper filter` with species, repository, keywords, dates, instrument all work
+- `pxseek fetch` retrieves ~50,848 datasets in one HTTP request
+- `pxseek filter` with species, repository, keywords, dates, instrument all work
 - Cache hit is instant; auto-fetch fallback works from `filter`
 - Clean output: no HTML, snake_case columns, correct column set
 
@@ -81,7 +81,7 @@ Items are annotated: ~~struck out~~ = resolved; **bold** = next priority; plain 
 
 1. ~~**No auto-fetch in filter.**~~ Resolved: `filter` auto-fetches from cache or API when no `--input` given.
 2. ~~**No filter-to-lookup pipeline.**~~ ~~`lookup` should accept `--input filtered.tsv`. → Phase 3a.~~ Resolved: `lookup --input` accepts TSV from `filter` or `fetch`.
-3. **Cache directory not obvious.** Consider `pxscraper cache info/clear` subcommands. → Phase 4.
+3. **Cache directory not obvious.** Consider `pxseek cache info/clear` subcommands. → Phase 4.
 4. ~~**Raw tracebacks on network errors.**~~ Resolved: `_fetch_summary_safe()` converts to `click.ClickException`.
 5. ~~**Logically invalid date range (`--after` > `--before`) produces empty results silently.**~~ Resolved: CLI validates range before data is loaded.
 6. ~~**Unknown `--keyword-columns` entry silently ignored.**~~ Resolved: CLI emits `Warning:` line for each unrecognised column.
@@ -97,7 +97,7 @@ Conventions established in v0.3.1 hardening. Follow these for all future code.
 ### Imports
 
 - **Module-level**: stdlib, then third-party, then local. One blank line between groups (enforced by ruff `I001`).
-- **Lazy imports in CLI**: Heavy libraries (`pandas`, `requests`, `lxml`) are imported inside command functions to keep `pxscraper --help` fast. Stdlib imports (`re`, `pathlib`) stay at module level.
+- **Lazy imports in CLI**: Heavy libraries (`pandas`, `requests`, `lxml`) are imported inside command functions to keep `pxseek --help` fast. Stdlib imports (`re`, `pathlib`) stay at module level.
 - **No late imports in library code**: `api.py`, `parse.py`, `filter.py`, `cache.py` import everything at top.
 
 ### Type hints
@@ -264,8 +264,8 @@ Test count: 228 → 236 (8 new in `TestFilterDeep`).
 
 - [ ] `--format tsv|csv|json` option for `fetch`, `filter`, `lookup`
 - [ ] Switch cache from TSV to Parquet format (addresses gap #1); include migration path for existing caches
-- [ ] `pxscraper cache info` — print cache dir path, file sizes, age, row counts (addresses gap #13)
-- [ ] `pxscraper cache clear` — remove cache files with confirmation prompt
+- [ ] `pxseek cache info` — print cache dir path, file sizes, age, row counts (addresses gap #13)
+- [ ] `pxseek cache clear` — remove cache files with confirmation prompt
 - [ ] `--quiet` flag for all commands (suppress all output except errors)
 - [ ] Bump version to 0.5.0
 
@@ -275,8 +275,8 @@ Test count: 228 → 236 (8 new in `TestFilterDeep`).
 
 **Goal**: Exploratory analysis features and quality-of-life improvements for power users.
 
-- [ ] `pxscraper stats` command: summary table — dataset counts by year, species, repository, instrument
-- [ ] Config file: `~/.pxscraper.toml` for user defaults (species, cache dir, delay, output format)
+- [ ] `pxseek stats` command: summary table — dataset counts by year, species, repository, instrument
+- [ ] Config file: `~/.pxseek.toml` for user defaults (species, cache dir, delay, output format)
 - [ ] `rich` integration for interactive terminal tables (optional dep; already in `pyproject.toml`)
 - [ ] Async batch fetching: replace sync `time.sleep` loop in `fetch_datasets_xml()` with `asyncio` + `aiohttp` + rate limiter (addresses gap #19); retain sync path as fallback
 - [ ] Bump version to 0.6.0

@@ -1,4 +1,4 @@
-"""Tests for pxscraper.cli module."""
+"""Tests for pxseek.cli module."""
 
 from unittest.mock import patch
 
@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from click.testing import CliRunner
 
-from pxscraper.cli import main
+from pxseek.cli import main
 
 MOCK_TSV = (
     "Dataset Identifier\tTitle\tRepos\tSpecies\tInstrument\tPublication\t"
@@ -58,7 +58,7 @@ class TestFetchCommand:
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
@@ -75,7 +75,7 @@ class TestFetchCommand:
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir), "-v"],
@@ -90,7 +90,7 @@ class TestFetchCommand:
         cache_dir = tmp_path / "cache"
 
         # First fetch populates cache
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
             runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
@@ -99,7 +99,7 @@ class TestFetchCommand:
 
         # Second fetch uses cache (no API call)
         output_file2 = tmp_path / "result2.tsv"
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
             result = runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file2), "--cache-dir", str(cache_dir)],
@@ -113,14 +113,14 @@ class TestFetchCommand:
         cache_dir = tmp_path / "cache"
 
         # First fetch
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
             )
 
         # Second fetch with --refresh
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV) as mock_fetch:
             runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir), "--refresh"],
@@ -132,7 +132,7 @@ class TestFetchCommand:
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
@@ -148,7 +148,7 @@ class TestFetchCommand:
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
@@ -227,7 +227,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -244,7 +244,7 @@ class TestFilterCommand:
         cache_dir = tmp_path / "cache"
 
         # Populate cache via fetch
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             runner.invoke(
                 main,
                 ["fetch", "-o", str(tmp_path / "full.tsv"), "--cache-dir", str(cache_dir)],
@@ -252,7 +252,7 @@ class TestFilterCommand:
 
         # Filter should use cache (no API call)
         output_file = tmp_path / "filtered.tsv"
-        with patch("pxscraper.api.fetch_summary") as mock_fetch:
+        with patch("pxseek.api.fetch_summary") as mock_fetch:
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -266,7 +266,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -283,7 +283,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -299,7 +299,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -315,7 +315,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -333,7 +333,7 @@ class TestFilterCommand:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_summary",
+            "pxseek.api.fetch_summary",
             side_effect=requests.ConnectionError("network down"),
         ):
             result = runner.invoke(
@@ -381,7 +381,7 @@ class TestFilterCommand:
         output_file = tmp_path / "filtered.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -401,7 +401,7 @@ class TestFilterCommand:
         kw_file = tmp_path / "keywords.txt"
         kw_file.write_text("mouse\n")
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
@@ -470,7 +470,7 @@ class TestFetchErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_summary",
+            "pxseek.api.fetch_summary",
             side_effect=requests.ConnectionError("network down"),
         ):
             result = runner.invoke(
@@ -488,7 +488,7 @@ class TestFetchErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_summary",
+            "pxseek.api.fetch_summary",
             side_effect=requests.Timeout("timed out"),
         ):
             result = runner.invoke(
@@ -505,7 +505,7 @@ class TestFetchErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_summary",
+            "pxseek.api.fetch_summary",
             side_effect=requests.HTTPError("500 Server Error"),
         ):
             result = runner.invoke(
@@ -528,7 +528,7 @@ class TestFetchDiagnostics:
         output_file = tmp_path / "result.tsv"
         cache_dir = tmp_path / "cache"
 
-        with patch("pxscraper.api.fetch_summary", return_value=MOCK_TSV):
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
                 ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir), "-v"],
@@ -614,7 +614,7 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "A lipidomics study in mice."),
         }
 
-        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -635,7 +635,7 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Also no target term."),
         }
 
-        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -665,7 +665,7 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
         }
 
-        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -679,7 +679,7 @@ class TestFilterDeep:
 
     def test_deep_uses_xml_cache(self, tmp_path):
         """Pre-cached XML is used without making network requests."""
-        from pxscraper import cache
+        from pxseek import cache
 
         input_file = self._write_input(tmp_path)
         output_file = tmp_path / "out.tsv"
@@ -687,7 +687,7 @@ class TestFilterDeep:
         cache.save_xml("PXD000001", self._xml("PXD000001", "A phosphoproteomics study."), cache_dir=cdir)
         cache.save_xml("PXD000002", self._xml("PXD000002", "A lipidomics study."), cache_dir=cdir)
 
-        with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
+        with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -707,8 +707,8 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
         }
 
-        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map), \
-                patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map), \
+                patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1):
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -727,8 +727,8 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
         }
 
-        with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map), \
-                patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map), \
+                patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1):
             result = CliRunner().invoke(
                 main,
                 ["filter", "-i", str(input_file), "-o", str(output_file),
@@ -745,7 +745,7 @@ class TestFilterDeep:
         output_file = tmp_path / "out.tsv"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             side_effect=requests.ConnectionError("network down"),
         ):
             result = CliRunner().invoke(

@@ -1,11 +1,11 @@
-"""Tests for pxscraper.api module."""
+"""Tests for pxseek.api module."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
 
-from pxscraper.api import (
+from pxseek.api import (
     DATASET_XML_URL,
     SUMMARY_URL,
     _session,
@@ -13,7 +13,7 @@ from pxscraper.api import (
     fetch_datasets_xml,
     fetch_summary,
 )
-from pxscraper.models import USER_AGENT, validate_pxd_id
+from pxseek.models import USER_AGENT, validate_pxd_id
 
 # ---------------------------------------------------------------------------
 # Session
@@ -64,7 +64,7 @@ class TestFetchSummary:
             fetch_summary(session=mock_session)
 
     def test_creates_own_session_if_none(self):
-        with patch("pxscraper.api._session") as mock_session_fn:
+        with patch("pxseek.api._session") as mock_session_fn:
             mock_session = MagicMock()
             mock_resp = MagicMock()
             mock_resp.text = MOCK_TSV
@@ -105,7 +105,7 @@ class TestFetchDatasetXml:
         mock_resp.raise_for_status = MagicMock()
         mock_session.get.return_value = mock_resp
 
-        with patch("pxscraper.api.time.sleep") as mock_sleep:
+        with patch("pxseek.api.time.sleep") as mock_sleep:
             fetch_dataset_xml("PXD000001", session=mock_session, delay=0.5)
             mock_sleep.assert_called_once_with(0.5)
 
@@ -116,7 +116,7 @@ class TestFetchDatasetXml:
         mock_resp.raise_for_status = MagicMock()
         mock_session.get.return_value = mock_resp
 
-        with patch("pxscraper.api.time.sleep") as mock_sleep:
+        with patch("pxseek.api.time.sleep") as mock_sleep:
             fetch_dataset_xml("PXD000001", session=mock_session, delay=0)
             mock_sleep.assert_not_called()
 
@@ -160,14 +160,14 @@ class TestFetchDatasetsXml:
 
     def test_returns_dict_of_xml(self):
         mock_session = self._make_session()
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(["PXD000001"], session=mock_session, delay=0)
         assert result == {"PXD000001": MOCK_XML}
 
     def test_multiple_ids(self):
         mock_session = self._make_session()
         ids = ["PXD000001", "PXD000002", "PXD000003"]
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(ids, session=mock_session, delay=0)
         assert set(result.keys()) == set(ids)
         assert all(v == MOCK_XML for v in result.values())
@@ -193,7 +193,7 @@ class TestFetchDatasetsXml:
 
         mock_session.get.side_effect = [good_resp, bad_resp]
 
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(["PXD000001", "PXD000002"], session=mock_session, delay=0)
 
         assert result["PXD000001"] == MOCK_XML
@@ -203,7 +203,7 @@ class TestFetchDatasetsXml:
         mock_session = MagicMock()
         mock_session.get.side_effect = requests.ConnectionError("network down")
 
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(["PXD000001"], session=mock_session, delay=0)
 
         assert result["PXD000001"] is None
@@ -212,7 +212,7 @@ class TestFetchDatasetsXml:
         mock_session = MagicMock()
         mock_session.get.side_effect = requests.Timeout("timed out")
 
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(
                 ["PXD000001", "PXD000002"], session=mock_session, delay=0
             )
@@ -235,7 +235,7 @@ class TestFetchDatasetsXml:
         mock_session = MagicMock()
         mock_session.get.side_effect = _side_effect
 
-        with patch("pxscraper.api.time.sleep"):
+        with patch("pxseek.api.time.sleep"):
             result = fetch_datasets_xml(
                 ["PXD000001", "PXD000002"], session=mock_session, delay=0
             )
@@ -246,15 +246,15 @@ class TestFetchDatasetsXml:
 
     def test_delay_is_passed_through(self):
         mock_session = self._make_session()
-        with patch("pxscraper.api.time.sleep") as mock_sleep:
+        with patch("pxseek.api.time.sleep") as mock_sleep:
             fetch_datasets_xml(["PXD000001"], session=mock_session, delay=1.5)
         mock_sleep.assert_called_once_with(1.5)
 
     def test_creates_own_session_if_none(self):
-        with patch("pxscraper.api._session") as mock_session_fn:
+        with patch("pxseek.api._session") as mock_session_fn:
             mock_session = self._make_session()
             mock_session_fn.return_value = mock_session
-            with patch("pxscraper.api.time.sleep"):
+            with patch("pxseek.api.time.sleep"):
                 result = fetch_datasets_xml(["PXD000001"], delay=0)
             mock_session_fn.assert_called_once()
             assert "PXD000001" in result

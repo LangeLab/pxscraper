@@ -1,10 +1,10 @@
-"""Tests for pxscraper.parse module."""
+"""Tests for pxseek.parse module."""
 
 from pathlib import Path
 
 import pytest
 
-from pxscraper.parse import ParseResult, parse_dataset_xml, parse_summary_tsv, strip_html
+from pxseek.parse import ParseResult, parse_dataset_xml, parse_summary_tsv, strip_html
 
 # ---------------------------------------------------------------------------
 # strip_html

@@ -8,7 +8,7 @@ import pytest
 import requests
 from click.testing import CliRunner
 
-from pxscraper.cli import main
+from pxseek.cli import main
 
 # ---------------------------------------------------------------------------
 # Fixtures / shared test data
@@ -111,7 +111,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             result = runner.invoke(
@@ -131,7 +131,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
         ):
             result = runner.invoke(
@@ -150,7 +150,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
         ):
             result = runner.invoke(
@@ -169,7 +169,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
         ):
             result = runner.invoke(
@@ -189,7 +189,7 @@ class TestLookupHappyPath:
 
         # PXD000001 appears in both --ids and --ids-file → should appear once
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
         ) as mock_fetch:
             result = runner.invoke(
@@ -208,7 +208,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             runner.invoke(
@@ -230,7 +230,7 @@ class TestLookupHappyPath:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch(
-                "pxscraper.api.fetch_datasets_xml",
+                "pxseek.api.fetch_datasets_xml",
                 return_value={"PXD000001": MOCK_XML_001},
             ):
                 result = runner.invoke(
@@ -247,7 +247,7 @@ class TestLookupHappyPath:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             result = runner.invoke(
@@ -274,7 +274,7 @@ class TestLookupConfirmation:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             result = runner.invoke(
@@ -290,7 +290,7 @@ class TestLookupConfirmation:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             result = runner.invoke(
@@ -309,8 +309,8 @@ class TestLookupConfirmation:
         ids = ["PXD000001", "PXD000002", "PXD000003"]
         xml_map = {pid: MOCK_XML_TEMPLATE.format(dataset_id=pid) for pid in ids}
 
-        with patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", 2):
-            with patch("pxscraper.api.fetch_datasets_xml", return_value=xml_map):
+        with patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", 2):
+            with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
                 result = runner.invoke(
                     main,
                     ["lookup", "--ids", ",".join(ids),
@@ -327,8 +327,8 @@ class TestLookupConfirmation:
 
         ids = ["PXD000001", "PXD000002", "PXD000003"]
 
-        with patch("pxscraper.models.LOOKUP_CONFIRM_THRESHOLD", 2):
-            with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
+        with patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", 2):
+            with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
                 runner.invoke(
                     main,
                     ["lookup", "--ids", ",".join(ids),
@@ -350,13 +350,13 @@ class TestLookupCache:
         """IDs already cached on disk are not re-fetched."""
         out = tmp_path / "result.tsv"
         cache_base = tmp_path / "cache"
-        # get_cache_dir appends .pxscraper_cache to the base
-        actual_cache = cache_base / ".pxscraper_cache"
+        # get_cache_dir appends .pxseek_cache to the base
+        actual_cache = cache_base / ".pxseek_cache"
         actual_cache.mkdir(parents=True)
         (actual_cache / "PXD000001.xml").write_text(MOCK_XML_001, encoding="utf-8")
         cache_dir = cache_base
 
-        with patch("pxscraper.api.fetch_datasets_xml") as mock_fetch:
+        with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
             result = runner.invoke(
                 main,
                 ["lookup", "--ids", "PXD000001",
@@ -370,13 +370,13 @@ class TestLookupCache:
         """Cached IDs are served from disk; only uncached IDs are fetched."""
         out = tmp_path / "result.tsv"
         cache_base = tmp_path / "cache"
-        actual_cache = cache_base / ".pxscraper_cache"
+        actual_cache = cache_base / ".pxseek_cache"
         actual_cache.mkdir(parents=True)
         (actual_cache / "PXD000001.xml").write_text(MOCK_XML_001, encoding="utf-8")
         cache_dir = cache_base
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000002": MOCK_XML_002},
         ) as mock_fetch:
             result = runner.invoke(
@@ -397,7 +397,7 @@ class TestLookupCache:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ):
             runner.invoke(
@@ -406,7 +406,7 @@ class TestLookupCache:
                  "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
             )
 
-        assert (cache_dir / ".pxscraper_cache" / "PXD000001.xml").exists()
+        assert (cache_dir / ".pxseek_cache" / "PXD000001.xml").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -451,7 +451,7 @@ class TestLookupErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": None},
         ):
             result = runner.invoke(
@@ -469,7 +469,7 @@ class TestLookupErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001, "PXD000002": None},
         ):
             result = runner.invoke(
@@ -490,7 +490,7 @@ class TestLookupErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             side_effect=requests.ConnectionError("network down"),
         ):
             result = runner.invoke(
@@ -507,7 +507,7 @@ class TestLookupErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             side_effect=requests.Timeout("timed out"),
         ):
             result = runner.invoke(
@@ -525,7 +525,7 @@ class TestLookupErrors:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ) as mock_fetch:
             result = runner.invoke(
@@ -550,7 +550,7 @@ class TestLookupDelay:
         cache_dir = tmp_path / "cache"
 
         with patch(
-            "pxscraper.api.fetch_datasets_xml",
+            "pxseek.api.fetch_datasets_xml",
             return_value={"PXD000001": MOCK_XML_001},
         ) as mock_fetch:
             runner.invoke(
@@ -572,12 +572,12 @@ class TestLookupVerbose:
     def test_verbose_reports_cache_hits(self, runner, tmp_path):
         out = tmp_path / "result.tsv"
         cache_base = tmp_path / "cache"
-        actual_cache = cache_base / ".pxscraper_cache"
+        actual_cache = cache_base / ".pxseek_cache"
         actual_cache.mkdir(parents=True)
         (actual_cache / "PXD000001.xml").write_text(MOCK_XML_001, encoding="utf-8")
         cache_dir = cache_base
 
-        with patch("pxscraper.api.fetch_datasets_xml"):
+        with patch("pxseek.api.fetch_datasets_xml"):
             result = runner.invoke(
                 main,
                 ["lookup", "--ids", "PXD000001",
