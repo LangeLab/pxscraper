@@ -183,8 +183,15 @@ class TestFilterCommand:
         runner = CliRunner()
         result = runner.invoke(main, ["filter", "--help"])
         assert result.exit_code == 0
-        for flag in ["--species", "--repo", "--keywords", "--after",
-                      "--before", "--instrument", "--keyword-columns"]:
+        for flag in [
+            "--species",
+            "--repo",
+            "--keywords",
+            "--after",
+            "--before",
+            "--instrument",
+            "--keyword-columns",
+        ]:
             assert flag in result.output
 
     def test_filter_requires_at_least_one_filter(self, tmp_path):
@@ -230,8 +237,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-s", "Homo sapiens"],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "-s",
+                    "Homo sapiens",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -255,8 +269,7 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary") as mock_fetch:
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-s", "Homo"],
+                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir), "-s", "Homo"],
             )
             assert mock_fetch.call_count == 0
         assert result.exit_code == 0
@@ -269,8 +282,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-s", "Mus musculus"],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "-s",
+                    "Mus musculus",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -286,8 +306,7 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-r", "MassIVE"],
+                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir), "-r", "MassIVE"],
             )
 
         assert result.exit_code == 0
@@ -302,8 +321,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-s", "Drosophila"],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "-s",
+                    "Drosophila",
+                ],
             )
 
         assert result.exit_code == 0
@@ -318,8 +344,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "--after", "2025-02-01"],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--after",
+                    "2025-02-01",
+                ],
             )
 
         assert result.exit_code == 0
@@ -338,8 +371,7 @@ class TestFilterCommand:
         ):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-s", "Homo"],
+                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir), "-s", "Homo"],
             )
 
         assert result.exit_code != 0
@@ -354,9 +386,7 @@ class TestFilterCommand:
             "publication\tlab_head\tannounce_date\tkeywords\n"
             "PXD000001\tTest\tPRIDE\tHomo sapiens\tOrbitrap\tno pub\tDoe\t2025-01-01\ttest,\n"
         )
-        result = runner.invoke(
-            main, ["filter", "-i", str(input_file), "-s", "[unterminated"]
-        )
+        result = runner.invoke(main, ["filter", "-i", str(input_file), "-s", "[unterminated"])
         assert result.exit_code != 0
         assert "Invalid regex" in result.output
 
@@ -369,9 +399,7 @@ class TestFilterCommand:
             "publication\tlab_head\tannounce_date\tkeywords\n"
             "PXD000001\tTest\tPRIDE\tHomo sapiens\tOrbitrap\tno pub\tDoe\t2025-01-01\ttest,\n"
         )
-        result = runner.invoke(
-            main, ["filter", "-i", str(input_file), "--instrument", "(bad"]
-        )
+        result = runner.invoke(main, ["filter", "-i", str(input_file), "--instrument", "(bad"])
         assert result.exit_code != 0
         assert "Invalid regex" in result.output
 
@@ -384,8 +412,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "--instrument", "Q Exactive"],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--instrument",
+                    "Q Exactive",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -404,8 +439,15 @@ class TestFilterCommand:
         with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
             result = runner.invoke(
                 main,
-                ["filter", "-o", str(output_file), "--cache-dir", str(cache_dir),
-                 "-k", str(kw_file)],
+                [
+                    "filter",
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "-k",
+                    str(kw_file),
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -431,9 +473,7 @@ class TestFilterCommand:
     def test_filter_after_later_than_before(self):
         """--after later than --before gives a friendly error before data is loaded."""
         runner = CliRunner()
-        result = runner.invoke(
-            main, ["filter", "--after", "2025-12-31", "--before", "2025-01-01"]
-        )
+        result = runner.invoke(main, ["filter", "--after", "2025-12-31", "--before", "2025-01-01"])
         assert result.exit_code != 0
         assert "--after" in result.output
         assert "--before" in result.output
@@ -450,8 +490,17 @@ class TestFilterCommand:
         )
         result = runner.invoke(
             main,
-            ["filter", "-i", str(input_file), "-o", str(output_file),
-             "-k", "test", "--keyword-columns", "nonexistent_col"],
+            [
+                "filter",
+                "-i",
+                str(input_file),
+                "-o",
+                str(output_file),
+                "-k",
+                "test",
+                "--keyword-columns",
+                "nonexistent_col",
+            ],
         )
         assert result.exit_code == 0, result.output
         assert "Warning" in result.output
@@ -618,9 +667,19 @@ class TestFilterDeep:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep", "--yes"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -639,9 +698,19 @@ class TestFilterDeep:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "zyxabsent", "--deep", "--yes"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "zyxabsent",
+                    "--deep",
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -669,9 +738,19 @@ class TestFilterDeep:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep", "--yes"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -688,16 +767,23 @@ class TestFilterDeep:
         cache.save_xml(
             "PXD000001", self._xml("PXD000001", "A phosphoproteomics study."), cache_dir=cdir
         )
-        cache.save_xml(
-            "PXD000002", self._xml("PXD000002", "A lipidomics study."), cache_dir=cdir
-        )
+        cache.save_xml("PXD000002", self._xml("PXD000002", "A lipidomics study."), cache_dir=cdir)
 
         with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -712,13 +798,25 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
         }
 
-        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map), \
-                patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+        with (
+            patch("pxseek.api.fetch_datasets_xml", return_value=xml_map),
+            patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1),
+        ):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep", "--yes"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -732,13 +830,24 @@ class TestFilterDeep:
             "PXD000002": self._xml("PXD000002", "Another phosphoproteomics study."),
         }
 
-        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map), \
-                patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1):
+        with (
+            patch("pxseek.api.fetch_datasets_xml", return_value=xml_map),
+            patch("pxseek.models.LOOKUP_CONFIRM_THRESHOLD", -1),
+        ):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                ],
                 input="n\n",
             )
 
@@ -755,9 +864,19 @@ class TestFilterDeep:
         ):
             result = CliRunner().invoke(
                 main,
-                ["filter", "-i", str(input_file), "-o", str(output_file),
-                 "--cache-dir", str(tmp_path / "cache"),
-                 "-k", "phosphoproteomics", "--deep", "--yes"],
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                    "--yes",
+                ],
             )
 
         assert result.exit_code != 0

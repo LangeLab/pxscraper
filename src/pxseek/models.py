@@ -38,10 +38,7 @@ XML_REQUEST_DELAY = 1.0
 LOOKUP_CONFIRM_THRESHOLD = 50
 
 # User-Agent string for API requests
-USER_AGENT = (
-    f"pxseek/{__version__}"
-    " (https://github.com/LangeLab/pxseek; academic research tool)"
-)
+USER_AGENT = f"pxseek/{__version__} (https://github.com/LangeLab/pxseek; academic research tool)"
 
 # HTTP timeout in seconds
 HTTP_TIMEOUT = 60

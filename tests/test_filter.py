@@ -225,6 +225,7 @@ class TestByKeywords:
         result = by_keywords(sample_df, "plas")
         assert "PXD000001" not in result["dataset_id"].values
 
+
 # ---------------------------------------------------------------------------
 # by_date_range
 # ---------------------------------------------------------------------------
@@ -319,16 +320,12 @@ class TestApplyFilters:
         assert "species" in summary["active_filters"][0]
 
     def test_multiple_filters(self, sample_df):
-        df, summary = apply_filters(
-            sample_df, species="Homo sapiens", repository="PRIDE"
-        )
+        df, summary = apply_filters(sample_df, species="Homo sapiens", repository="PRIDE")
         # PXD1 (Homo, PRIDE), PXD3 (Homo, PRIDE), PXD5 (Mus;Homo, PRIDE)
         assert summary["filtered_count"] == 3
 
     def test_combo_species_and_keywords(self, sample_df):
-        df, summary = apply_filters(
-            sample_df, species="Homo sapiens", keywords="cancer"
-        )
+        df, summary = apply_filters(sample_df, species="Homo sapiens", keywords="cancer")
         # Homo sapiens: PXD1, PXD3, PXD5
         # Then cancer: PXD1 title "Cancer...", PXD5 title "Cancer..."
         assert summary["filtered_count"] == 2
@@ -360,9 +357,7 @@ class TestApplyFilters:
 
     def test_keyword_columns_passthrough(self, sample_df):
         # Search only in title
-        df, summary = apply_filters(
-            sample_df, keywords="proteomics", keyword_columns="title"
-        )
+        df, summary = apply_filters(sample_df, keywords="proteomics", keyword_columns="title")
         # word-boundary: "proteomics" matches PXD1, but not "phosphoproteomics" in PXD2
         assert summary["filtered_count"] == 1
 

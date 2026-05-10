@@ -89,8 +89,15 @@ class TestParseSummaryTsv:
         df = result.df
         assert len(df) == 2
         assert list(df.columns) == [
-            "dataset_id", "title", "repository", "species",
-            "instrument", "publication", "lab_head", "announce_date", "keywords",
+            "dataset_id",
+            "title",
+            "repository",
+            "species",
+            "instrument",
+            "publication",
+            "lab_head",
+            "announce_date",
+            "keywords",
         ]
 
     def test_html_stripped_from_dataset_id(self):
@@ -160,10 +167,7 @@ class TestParseSummaryTsvFixture:
         df = parse_summary_tsv(fixture_tsv).df
         for col in df.columns:
             series = df[col].dropna()
-            assert not series.str.contains("<a ", regex=False).any(), (
-                f"HTML found in column {col}"
-            )
-
+            assert not series.str.contains("<a ", regex=False).any(), f"HTML found in column {col}"
 
 
 # ---------------------------------------------------------------------------
@@ -410,8 +414,12 @@ class TestParseEdgeCases:
         )
         result = parse_dataset_xml(xml)
         for key in (
-            "submitter_name", "submitter_email", "submitter_affiliation",
-            "lab_head_name", "lab_head_email", "lab_head_affiliation",
+            "submitter_name",
+            "submitter_email",
+            "submitter_affiliation",
+            "lab_head_name",
+            "lab_head_email",
+            "lab_head_affiliation",
         ):
             assert key in result, f"Missing key: {key}"
             assert result[key] == "", f"Expected empty string for {key}"

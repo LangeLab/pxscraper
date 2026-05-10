@@ -35,10 +35,7 @@ class TestSession:
 # ---------------------------------------------------------------------------
 
 
-MOCK_TSV = (
-    "Dataset Identifier\tTitle\tRepos\n"
-    "PXD000001\tTest\tPRIDE\n"
-)
+MOCK_TSV = "Dataset Identifier\tTitle\tRepos\nPXD000001\tTest\tPRIDE\n"
 
 
 class TestFetchSummary:
@@ -213,9 +210,7 @@ class TestFetchDatasetsXml:
         mock_session.get.side_effect = requests.Timeout("timed out")
 
         with patch("pxseek.api.time.sleep"):
-            result = fetch_datasets_xml(
-                ["PXD000001", "PXD000002"], session=mock_session, delay=0
-            )
+            result = fetch_datasets_xml(["PXD000001", "PXD000002"], session=mock_session, delay=0)
 
         assert result == {"PXD000001": None, "PXD000002": None}
 
@@ -236,9 +231,7 @@ class TestFetchDatasetsXml:
         mock_session.get.side_effect = _side_effect
 
         with patch("pxseek.api.time.sleep"):
-            result = fetch_datasets_xml(
-                ["PXD000001", "PXD000002"], session=mock_session, delay=0
-            )
+            result = fetch_datasets_xml(["PXD000001", "PXD000002"], session=mock_session, delay=0)
 
         # Only PXD000001 was successfully fetched before interrupt
         assert result["PXD000001"] == MOCK_XML

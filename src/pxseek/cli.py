@@ -24,9 +24,7 @@ def _fetch_summary_safe(verbose=False):
             "Could not reach ProteomeCentral. Check your network connection."
         )
     except requests.Timeout:
-        raise click.ClickException(
-            "Request to ProteomeCentral timed out. Try again later."
-        )
+        raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
     except requests.HTTPError as exc:
         raise click.ClickException(f"ProteomeCentral returned an error: {exc}")
 
@@ -98,10 +96,14 @@ def fetch(output, cache_dir, refresh, verbose):
     "-k", "--keywords", default=None, help="Comma-separated keywords or path to keyword file."
 )
 @click.option(
-    "--after", default=None, help="Include datasets on or after DATE (YYYY-MM-DD).",
+    "--after",
+    default=None,
+    help="Include datasets on or after DATE (YYYY-MM-DD).",
 )
 @click.option(
-    "--before", default=None, help="Include datasets on or before DATE (YYYY-MM-DD).",
+    "--before",
+    default=None,
+    help="Include datasets on or before DATE (YYYY-MM-DD).",
 )
 @click.option("--instrument", default=None, help="Filter by instrument (regex).")
 @click.option(
@@ -119,11 +121,28 @@ def fetch(output, cache_dir, refresh, verbose):
 @click.option("--deep", is_flag=True, help="Also search within dataset descriptions (fetches XML).")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt for --deep.")
 @click.option(
-    "--delay", default=1.0, type=float, show_default=True,
+    "--delay",
+    default=1.0,
+    type=float,
+    show_default=True,
     help="Seconds between XML requests (--deep only).",
 )
-def filter(input_file, output, species, repo, keywords, after, before,
-           instrument, keyword_columns, cache_dir, verbose, deep, yes, delay):
+def filter(
+    input_file,
+    output,
+    species,
+    repo,
+    keywords,
+    after,
+    before,
+    instrument,
+    keyword_columns,
+    cache_dir,
+    verbose,
+    deep,
+    yes,
+    delay,
+):
     """Filter ProteomeXchange datasets by species, repo, keywords, dates, etc."""
     from pxseek import cache, parse
     from pxseek import filter as filt
@@ -232,8 +251,7 @@ def filter(input_file, output, species, repo, keywords, after, before,
         if len(to_fetch) > LOOKUP_CONFIRM_THRESHOLD and not yes:
             est_seconds = int(len(to_fetch) * delay)
             click.confirm(
-                f"Fetch XML for {len(to_fetch)} dataset(s)?"
-                f" (~{est_seconds}s at {delay}s/request)",
+                f"Fetch XML for {len(to_fetch)} dataset(s)? (~{est_seconds}s at {delay}s/request)",
                 abort=True,
             )
 
@@ -251,9 +269,7 @@ def filter(input_file, output, species, repo, keywords, after, before,
                     "Could not reach ProteomeCentral. Check your network connection."
                 )
             except requests.Timeout:
-                raise click.ClickException(
-                    "Request to ProteomeCentral timed out. Try again later."
-                )
+                raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
             for pid, raw_xml in fetched.items():
                 if raw_xml is not None:
                     cache.save_xml(pid, raw_xml, cache_dir=cdir)
@@ -303,24 +319,37 @@ def filter(input_file, output, species, repo, keywords, after, before,
 @main.command()
 @click.option("--ids", default=None, help="Comma-separated PXD IDs.")
 @click.option(
-    "--ids-file", default=None, type=click.Path(exists=True),
+    "--ids-file",
+    default=None,
+    type=click.Path(exists=True),
     help="File with one PXD ID per line.",
 )
 @click.option(
-    "-i", "--input", "input_file", default=None, type=click.Path(exists=True),
+    "-i",
+    "--input",
+    "input_file",
+    default=None,
+    type=click.Path(exists=True),
     help="TSV from 'filter' or 'fetch': uses the dataset_id column.",
 )
 @click.option("-o", "--output", default="lookup_results.tsv", help="Output file path.")
 @click.option(
-    "--delay", default=1.0, type=float, show_default=True,
+    "--delay",
+    default=1.0,
+    type=float,
+    show_default=True,
     help="Seconds to wait between requests.",
 )
 @click.option(
-    "--cache-dir", default=None, type=click.Path(),
+    "--cache-dir",
+    default=None,
+    type=click.Path(),
     help="Cache directory [default: .pxseek_cache/ in cwd].",
 )
 @click.option(
-    "--yes", "-y", is_flag=True,
+    "--yes",
+    "-y",
+    is_flag=True,
     help="Skip confirmation prompt.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
@@ -353,17 +382,11 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
         except Exception as exc:
             raise click.ClickException(f"Could not read input file {input_file!r}: {exc}")
         if "dataset_id" not in tsv_df.columns:
-            raise click.ClickException(
-                f"Input file {input_file!r} has no 'dataset_id' column."
-            )
-        raw_ids.extend(
-            str(v).strip() for v in tsv_df["dataset_id"].dropna() if str(v).strip()
-        )
+            raise click.ClickException(f"Input file {input_file!r} has no 'dataset_id' column.")
+        raw_ids.extend(str(v).strip() for v in tsv_df["dataset_id"].dropna() if str(v).strip())
 
     if not raw_ids:
-        raise click.ClickException(
-            "No PXD IDs provided. Use --ids, --ids-file, or --input."
-        )
+        raise click.ClickException("No PXD IDs provided. Use --ids, --ids-file, or --input.")
 
     # ------------------------------------------------------------------ #
     # 2. Validate all IDs upfront                                          #
@@ -377,9 +400,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
             bad.append(raw)
 
     if bad:
-        raise click.ClickException(
-            f"Invalid PXD ID(s): {', '.join(bad)}"
-        )
+        raise click.ClickException(f"Invalid PXD ID(s): {', '.join(bad)}")
 
     # Deduplicate while preserving order
     seen: set[str] = set()
@@ -407,8 +428,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     if len(to_fetch) > LOOKUP_CONFIRM_THRESHOLD and not yes:
         est_seconds = int(len(to_fetch) * delay)
         click.confirm(
-            f"Fetch XML for {len(to_fetch)} dataset(s)? "
-            f"(~{est_seconds}s at {delay}s/request)",
+            f"Fetch XML for {len(to_fetch)} dataset(s)? (~{est_seconds}s at {delay}s/request)",
             abort=True,
         )
 
@@ -430,9 +450,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
                 "Could not reach ProteomeCentral. Check your network connection."
             )
         except requests.Timeout:
-            raise click.ClickException(
-                "Request to ProteomeCentral timed out. Try again later."
-            )
+            raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
 
         for pid, raw_xml in fetched.items():
             xml_map[pid] = raw_xml

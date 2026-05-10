@@ -172,6 +172,7 @@ class TestCorruptedMetadata:
     def test_corrupted_json_creates_backup(self, cache_dir):
         """Corrupted _metadata.json creates a .bak backup file."""
         from pxseek.cache import _read_meta
+
         meta_path = cache_dir / CACHE_META_FILE
         meta_path.write_text("{invalid json!!!")
         _read_meta(cache_dir)
@@ -196,6 +197,7 @@ class TestIsStaleMissingTimestamp:
     def test_missing_timestamp_key_returns_stale(self, cache_dir, sample_df):
         """Entry exists but has no 'timestamp' key — treated as stale."""
         from pxseek.cache import _read_meta, _write_meta
+
         save(sample_df, "notsaved_via_api", cache_dir=cache_dir)
         meta = _read_meta(cache_dir)
         del meta["notsaved_via_api"]["timestamp"]
@@ -205,6 +207,7 @@ class TestIsStaleMissingTimestamp:
     def test_empty_entry_returns_stale(self, cache_dir):
         """Entry is {} — treated as stale."""
         from pxseek.cache import _read_meta, _write_meta
+
         meta = _read_meta(cache_dir)
         meta["empty_entry"] = {}
         _write_meta(cache_dir, meta)

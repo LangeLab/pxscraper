@@ -71,8 +71,9 @@ class ParseResult:
                 )
 
         if self.dropped_ids:
-            lines.append(f"  {len(self.dropped_ids)} row(s) dropped after parse"
-                         " (invalid dataset ID):")
+            lines.append(
+                f"  {len(self.dropped_ids)} row(s) dropped after parse (invalid dataset ID):"
+            )
             n_show = min(len(self.dropped_ids), 5)
             for bogus in self.dropped_ids[:n_show]:
                 lines.append(f"    id={bogus!r}")
@@ -172,9 +173,7 @@ def parse_summary_tsv(raw_tsv: str) -> ParseResult:
     clean_tsv = "\n".join(clean_lines)
 
     try:
-        df = pd.read_csv(
-            io.StringIO(clean_tsv), sep="\t", dtype=str, on_bad_lines="skip"
-        )
+        df = pd.read_csv(io.StringIO(clean_tsv), sep="\t", dtype=str, on_bad_lines="skip")
     except pd.errors.EmptyDataError:
         return ParseResult(df=pd.DataFrame(), total_raw_lines=0)
 
@@ -274,8 +273,12 @@ def parse_dataset_xml(raw_xml: str) -> dict:
 
     # Pre-seed contact fields so the dict always has consistent keys
     for key in (
-        "submitter_name", "submitter_email", "submitter_affiliation",
-        "lab_head_name", "lab_head_email", "lab_head_affiliation",
+        "submitter_name",
+        "submitter_email",
+        "submitter_affiliation",
+        "lab_head_name",
+        "lab_head_email",
+        "lab_head_affiliation",
     ):
         result[key] = ""
 

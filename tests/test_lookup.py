@@ -87,8 +87,9 @@ def runner():
 def input_tsv(tmp_path):
     """Write a minimal filter-output TSV with two dataset IDs."""
     p = tmp_path / "filtered.tsv"
-    p.write_text("dataset_id\ttitle\tspecies\nPXD000001\tFoo\tHomo sapiens\n"
-                 "PXD000002\tBar\tMus musculus\n")
+    p.write_text(
+        "dataset_id\ttitle\tspecies\nPXD000001\tFoo\tHomo sapiens\nPXD000002\tBar\tMus musculus\n"
+    )
     return p
 
 
@@ -116,8 +117,16 @@ class TestLookupHappyPath:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001", "-o", str(out),
-                 "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -136,8 +145,16 @@ class TestLookupHappyPath:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001,PXD000002",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001,PXD000002",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -155,8 +172,16 @@ class TestLookupHappyPath:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids-file", str(ids_file),
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids-file",
+                    str(ids_file),
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -174,8 +199,16 @@ class TestLookupHappyPath:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--input", str(input_tsv),
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--input",
+                    str(input_tsv),
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -194,8 +227,18 @@ class TestLookupHappyPath:
         ) as mock_fetch:
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001", "--ids-file", str(ids_file),
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "--ids-file",
+                    str(ids_file),
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -213,14 +256,26 @@ class TestLookupHappyPath:
         ):
             runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         df = pd.read_csv(out, sep="\t")
         for col in [
-            "dataset_id", "title", "species", "instruments",
-            "submitter_name", "lab_head_name",
+            "dataset_id",
+            "title",
+            "species",
+            "instruments",
+            "submitter_name",
+            "lab_head_name",
         ]:
             assert col in df.columns, f"Missing column: {col}"
 
@@ -235,8 +290,7 @@ class TestLookupHappyPath:
             ):
                 result = runner.invoke(
                     main,
-                    ["lookup", "--ids", "PXD000001",
-                     "--cache-dir", str(cache_dir), "--yes"],
+                    ["lookup", "--ids", "PXD000001", "--cache-dir", str(cache_dir), "--yes"],
                 )
             assert result.exit_code == 0, result.output
             assert Path("lookup_results.tsv").exists()
@@ -252,8 +306,16 @@ class TestLookupHappyPath:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -279,8 +341,16 @@ class TestLookupConfirmation:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
         assert result.exit_code == 0
 
@@ -295,8 +365,7 @@ class TestLookupConfirmation:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir)],
+                ["lookup", "--ids", "PXD000001", "-o", str(out), "--cache-dir", str(cache_dir)],
             )
 
         assert result.exit_code == 0, result.output
@@ -313,8 +382,15 @@ class TestLookupConfirmation:
             with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
                 runner.invoke(
                     main,
-                    ["lookup", "--ids", ",".join(ids),
-                     "-o", str(out), "--cache-dir", str(cache_dir)],
+                    [
+                        "lookup",
+                        "--ids",
+                        ",".join(ids),
+                        "-o",
+                        str(out),
+                        "--cache-dir",
+                        str(cache_dir),
+                    ],
                     input="n\n",
                 )
 
@@ -331,8 +407,15 @@ class TestLookupConfirmation:
             with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
                 runner.invoke(
                     main,
-                    ["lookup", "--ids", ",".join(ids),
-                     "-o", str(out), "--cache-dir", str(cache_dir)],
+                    [
+                        "lookup",
+                        "--ids",
+                        ",".join(ids),
+                        "-o",
+                        str(out),
+                        "--cache-dir",
+                        str(cache_dir),
+                    ],
                     input="n\n",
                 )
 
@@ -359,8 +442,16 @@ class TestLookupCache:
         with patch("pxseek.api.fetch_datasets_xml") as mock_fetch:
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         mock_fetch.assert_not_called()
@@ -381,8 +472,16 @@ class TestLookupCache:
         ) as mock_fetch:
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001,PXD000002",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001,PXD000002",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -402,8 +501,16 @@ class TestLookupCache:
         ):
             runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert (cache_dir / ".pxseek_cache" / "PXD000001.xml").exists()
@@ -456,8 +563,16 @@ class TestLookupErrors:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code != 0
@@ -474,8 +589,16 @@ class TestLookupErrors:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001,PXD000002",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001,PXD000002",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -495,8 +618,16 @@ class TestLookupErrors:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code != 0
@@ -512,8 +643,16 @@ class TestLookupErrors:
         ):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code != 0
@@ -529,8 +668,16 @@ class TestLookupErrors:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", many_ids,
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    many_ids,
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code != 0
@@ -549,8 +696,17 @@ class TestLookupErrors:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", many_ids,
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes", "-v"],
+                [
+                    "lookup",
+                    "--ids",
+                    many_ids,
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                    "-v",
+                ],
             )
 
         assert "and" not in result.output  # no "and N more"
@@ -566,8 +722,16 @@ class TestLookupErrors:
         with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", few_ids,
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    few_ids,
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert "5 dataset(s)" in result.output
@@ -585,8 +749,16 @@ class TestLookupErrors:
         ) as mock_fetch:
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001,PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001,PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         assert result.exit_code == 0, result.output
@@ -610,8 +782,18 @@ class TestLookupDelay:
         ) as mock_fetch:
             runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001", "--delay", "0.5",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "--delay",
+                    "0.5",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
             )
 
         kwargs = mock_fetch.call_args[1]
@@ -635,8 +817,17 @@ class TestLookupVerbose:
         with patch("pxseek.api.fetch_datasets_xml"):
             result = runner.invoke(
                 main,
-                ["lookup", "--ids", "PXD000001",
-                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes", "-v"],
+                [
+                    "lookup",
+                    "--ids",
+                    "PXD000001",
+                    "-o",
+                    str(out),
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                    "-v",
+                ],
             )
 
         assert "cached" in result.output.lower()
@@ -651,6 +842,13 @@ class TestLookupHelp:
     def test_lookup_help_shows_all_options(self, runner):
         result = runner.invoke(main, ["lookup", "--help"])
         assert result.exit_code == 0
-        for flag in ["--ids", "--ids-file", "--input", "--output",
-                     "--delay", "--yes", "--cache-dir"]:
+        for flag in [
+            "--ids",
+            "--ids-file",
+            "--input",
+            "--output",
+            "--delay",
+            "--yes",
+            "--cache-dir",
+        ]:
             assert flag in result.output, f"Missing flag in help: {flag}"

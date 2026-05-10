@@ -10,13 +10,11 @@ from pxseek.models import HTTP_TIMEOUT, USER_AGENT, XML_REQUEST_DELAY, validate_
 log = logging.getLogger(__name__)
 
 SUMMARY_URL = (
-    "https://proteomecentral.proteomexchange.org/cgi/GetDataset"
-    "?action=summary&outputMode=tsv"
+    "https://proteomecentral.proteomexchange.org/cgi/GetDataset?action=summary&outputMode=tsv"
 )
 
 DATASET_XML_URL = (
-    "https://proteomecentral.proteomexchange.org/cgi/GetDataset"
-    "?outputMode=XML&ID={dataset_id}"
+    "https://proteomecentral.proteomexchange.org/cgi/GetDataset?outputMode=XML&ID={dataset_id}"
 )
 
 
@@ -96,8 +94,6 @@ def fetch_datasets_xml(
                 log.warning("Failed to fetch %s: %s", dataset_id, exc)
                 results[dataset_id] = None
     except KeyboardInterrupt:
-        log.warning(
-            "Interrupted after %d / %d datasets.", len(results), len(validated)
-        )
+        log.warning("Interrupted after %d / %d datasets.", len(results), len(validated))
 
     return results
