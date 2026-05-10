@@ -1,5 +1,6 @@
 """TSV and XML parsing utilities."""
 
+import html
 import io
 import re
 from dataclasses import dataclass, field
@@ -82,10 +83,10 @@ class ParseResult:
 
 
 def strip_html(text: str) -> str:
-    """Remove HTML tags from a string, keeping the inner text."""
+    """Remove HTML tags from a string, keeping the inner text, and decode HTML entities."""
     if not isinstance(text, str):
         return text
-    return _HTML_TAG_RE.sub("", text).strip()
+    return html.unescape(_HTML_TAG_RE.sub("", text).strip())
 
 
 def _repair_multiline_tsv(raw_tsv: str) -> str:

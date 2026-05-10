@@ -43,6 +43,27 @@ class TestStripHtml:
     def test_whitespace_stripping(self):
         assert strip_html("  <b>hello</b>  ") == "hello"
 
+    def test_html_entity_amp(self):
+        assert strip_html("TNF &amp; IL6") == "TNF & IL6"
+
+    def test_html_entity_lt_gt(self):
+        assert strip_html("&lt;script&gt;") == "<script>"
+
+    def test_html_entity_nbsp(self):
+        assert strip_html("hello&nbsp;world") == "hello\u00a0world"
+
+    def test_html_entity_numeric(self):
+        assert strip_html("&#39;quoted&#39;") == "'quoted'"
+
+    def test_html_entity_hex(self):
+        assert strip_html("&#x27;single&#x27;") == "'single'"
+
+    def test_html_entity_with_tags(self):
+        assert strip_html("<b>TNF &amp; IL6</b>") == "TNF & IL6"
+
+    def test_html_entity_apos(self):
+        assert strip_html("it&apos;s") == "it's"
+
 
 # ---------------------------------------------------------------------------
 # parse_summary_tsv
