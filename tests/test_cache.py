@@ -169,6 +169,14 @@ class TestCorruptedMetadata:
         assert is_stale("summary", cache_dir=cache_dir) is True
         assert cache_info("summary", cache_dir=cache_dir) is None
 
+    def test_corrupted_json_creates_backup(self, cache_dir):
+        """Corrupted _metadata.json creates a .bak backup file."""
+        from pxseek.cache import _read_meta
+        meta_path = cache_dir / CACHE_META_FILE
+        meta_path.write_text("{invalid json!!!")
+        _read_meta(cache_dir)
+        assert meta_path.with_suffix(".json.bak").exists()
+
     def test_save_overwrites_corrupted_json(self, cache_dir, sample_df):
         """Saving after corruption should recover cleanly."""
         meta_path = cache_dir / CACHE_META_FILE
@@ -177,6 +185,30 @@ class TestCorruptedMetadata:
         loaded = load("recovery", cache_dir=cache_dir)
         assert loaded is not None
         assert len(loaded) == 3
+
+    def test_atomic_write_leaves_no_tmp(self, cache_dir, sample_df):
+        """Atomic write should not leave .tmp files behind."""
+        save(sample_df, "atom", cache_dir=cache_dir)
+        assert not list(cache_dir.glob("*.tmp"))
+
+
+class TestIsStaleMissingTimestamp:
+    def test_missing_timestamp_key_returns_stale(self, cache_dir, sample_df):
+        """Entry exists but has no 'timestamp' key — treated as stale."""
+        from pxseek.cache import _read_meta, _write_meta
+        save(sample_df, "notsaved_via_api", cache_dir=cache_dir)
+        meta = _read_meta(cache_dir)
+        del meta["notsaved_via_api"]["timestamp"]
+        _write_meta(cache_dir, meta)
+        assert is_stale("notsaved_via_api", cache_dir=cache_dir) is True
+
+    def test_empty_entry_returns_stale(self, cache_dir):
+        """Entry is {} — treated as stale."""
+        from pxseek.cache import _read_meta, _write_meta
+        meta = _read_meta(cache_dir)
+        meta["empty_entry"] = {}
+        _write_meta(cache_dir, meta)
+        assert is_stale("empty_entry", cache_dir=cache_dir) is True
 
 
 # ---------------------------------------------------------------------------

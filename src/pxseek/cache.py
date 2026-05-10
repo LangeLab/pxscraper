@@ -5,6 +5,7 @@ so users can see and manage it directly. The directory is gitignored.
 """
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -34,12 +35,16 @@ def _read_meta(cache_dir: Path) -> dict:
         try:
             return json.loads(meta_path.read_text())
         except json.JSONDecodeError:
+            backup = meta_path.with_suffix(".json.bak")
+            meta_path.rename(backup)
             return {}
     return {}
 
 
 def _write_meta(cache_dir: Path, meta: dict) -> None:
-    _meta_path(cache_dir).write_text(json.dumps(meta, indent=2))
+    tmp = _meta_path(cache_dir).with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(meta, indent=2))
+    os.replace(tmp, _meta_path(cache_dir))
 
 
 def save(df: pd.DataFrame, name: str, cache_dir: Path | None = None) -> Path:
@@ -75,9 +80,13 @@ def is_stale(
     """
     cache_dir = cache_dir or get_cache_dir()
     meta = _read_meta(cache_dir)
-    if name not in meta:
+    entry = meta.get(name)
+    if entry is None:
         return True
-    age_hours = (time.time() - meta[name]["timestamp"]) / 3600
+    ts = entry.get("timestamp")
+    if ts is None:
+        return True
+    age_hours = (time.time() - ts) / 3600
     return age_hours > max_age_hours
 
 
