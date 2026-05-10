@@ -535,7 +535,7 @@ class TestFetchDiagnostics:
             )
 
         assert result.exit_code == 0
-        assert "no rows skipped" in result.output.lower()
+        assert "no issues" in result.output.lower()
 
 
 # ---------------------------------------------------------------------------

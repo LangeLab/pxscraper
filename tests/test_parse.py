@@ -370,9 +370,10 @@ class TestParseEdgeCases:
         assert len(df) == 0
         assert "dataset_id" in df.columns
 
-    def test_tsv_empty_string_raises(self):
-        with pytest.raises(Exception):
-            parse_summary_tsv("")
+    def test_tsv_empty_string_returns_empty(self):
+        result = parse_summary_tsv("")
+        assert len(result.df) == 0
+        assert result.total_raw_lines == 0
 
     def test_xml_no_contacts_has_consistent_keys(self):
         """parse_dataset_xml returns all 6 contact keys even when ContactList is empty."""

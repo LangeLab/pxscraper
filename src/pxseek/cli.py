@@ -73,16 +73,11 @@ def fetch(output, cache_dir, refresh, verbose):
     df = result.df
 
     # Report parse diagnostics
-    if result.skipped_count > 0:
-        click.echo(
-            f"Parsed {len(df)} datasets ({result.skipped_count} malformed row(s) skipped)"
-        )
-        if verbose:
-            for line_num in result.skipped_lines:
-                click.echo(f"  skipped line {line_num}")
+    if result.skipped_count > 0 or result.dropped_ids:
+        click.echo(result.report())
     else:
         if verbose:
-            click.echo(f"Parsed {len(df)} datasets (no rows skipped)")
+            click.echo(f"Parsed {len(df)} datasets (no issues)")
 
     # Save to cache
     cache.save(df, "summary", cache_dir=cdir)
