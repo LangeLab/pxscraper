@@ -519,6 +519,61 @@ class TestLookupErrors:
         assert result.exit_code != 0
         assert "timed out" in result.output.lower()
 
+    def test_failure_list_truncated_when_many(self, runner, tmp_path):
+        """More than 10 failures should be truncated with 'and N more'."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+        many_ids = ",".join(f"PXD{i:06d}" for i in range(1, 21))  # PXD000001..PXD000020
+        xml_map = {f"PXD{i:06d}": None for i in range(1, 21)}  # all fail
+
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
+            result = runner.invoke(
+                main,
+                ["lookup", "--ids", many_ids,
+                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+            )
+
+        assert result.exit_code != 0
+        assert "20 dataset(s)" in result.output
+        assert "and 10 more" in result.output
+        assert "PXD000001" in result.output
+        assert "PXD000020" not in result.output
+
+    def test_failure_list_full_in_verbose(self, runner, tmp_path):
+        """More than 10 failures with -v shows all IDs."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+        many_ids = ",".join(f"PXD{i:06d}" for i in range(1, 16))  # PXD000001..PXD000015
+        xml_map = {f"PXD{i:06d}": None for i in range(1, 16)}
+
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
+            result = runner.invoke(
+                main,
+                ["lookup", "--ids", many_ids,
+                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes", "-v"],
+            )
+
+        assert "and" not in result.output  # no "and N more"
+        assert "PXD000015" in result.output
+
+    def test_failure_list_few_shows_all(self, runner, tmp_path):
+        """10 or fewer failures shows full list without truncation."""
+        out = tmp_path / "result.tsv"
+        cache_dir = tmp_path / "cache"
+        few_ids = ",".join(f"PXD{i:06d}" for i in range(1, 6))  # PXD000001..PXD000005
+        xml_map = {f"PXD{i:06d}": None for i in range(1, 6)}
+
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
+            result = runner.invoke(
+                main,
+                ["lookup", "--ids", few_ids,
+                 "-o", str(out), "--cache-dir", str(cache_dir), "--yes"],
+            )
+
+        assert "5 dataset(s)" in result.output
+        assert "and" not in result.output
+        assert "PXD000005" in result.output
+
     def test_duplicate_ids_deduplication(self, runner, tmp_path):
         """Duplicate IDs (same ID in --ids twice) are fetched only once."""
         out = tmp_path / "result.tsv"

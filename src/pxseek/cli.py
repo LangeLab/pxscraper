@@ -457,11 +457,12 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
             failed.append(pid)
 
     if failed:
-        click.echo(
-            f"Warning: {len(failed)} dataset(s) could not be fetched/parsed: "
-            f"{', '.join(failed)}",
-            err=True,
-        )
+        msg = f"Warning: {len(failed)} dataset(s) could not be fetched/parsed: "
+        if verbose or len(failed) <= 10:
+            msg += ", ".join(failed)
+        else:
+            msg += ", ".join(failed[:10]) + f" and {len(failed) - 10} more"
+        click.echo(msg, err=True)
 
     if not rows:
         raise click.ClickException("No data to write — all lookups failed.")
