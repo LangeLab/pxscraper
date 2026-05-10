@@ -47,7 +47,13 @@ def by_keywords(
     if not kw_list:
         return df.copy()
 
-    pattern = "|".join(rf"\b{re.escape(kw)}\b" for kw in kw_list)
+    def _wrap(kw: str) -> str:
+        escaped = re.escape(kw)
+        left = r"\b" if kw[0].isalnum() or kw[0] == "_" else ""
+        right = r"\b" if kw[-1].isalnum() or kw[-1] == "_" else ""
+        return f"{left}{escaped}{right}"
+
+    pattern = "|".join(_wrap(kw) for kw in kw_list)
 
     mask = pd.Series(False, index=df.index)
     for col in columns:

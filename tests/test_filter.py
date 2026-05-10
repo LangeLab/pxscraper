@@ -193,6 +193,37 @@ class TestByKeywords:
         result = by_keywords(sample_df, "cancer")
         assert "PXD000001" not in result["dataset_id"].values
 
+    def test_non_word_leading_char_matches(self, sample_df):
+        """Keyword starting with non-word char like '.mzML' should match."""
+        sample_df.loc[0, "title"] = "Analysis with .mzML files"
+        result = by_keywords(sample_df, ".mzML")
+        assert "PXD000001" in result["dataset_id"].values
+
+    def test_non_word_leading_and_trailing(self, sample_df):
+        """Keyword like '+H' where first char is non-word should match."""
+        sample_df.loc[0, "title"] = "Peptide +H identification"
+        result = by_keywords(sample_df, "+H")
+        assert "PXD000001" in result["dataset_id"].values
+
+    def test_hyphenated_keyword(self, sample_df):
+        """Keyword like 'T-cell' where all chars are \\w should use full boundaries."""
+        sample_df.loc[0, "title"] = "T-cell receptor analysis"
+        result = by_keywords(sample_df, "T-cell")
+        assert "PXD000001" in result["dataset_id"].values
+
+    def test_mixed_non_word_keywords(self, sample_df):
+        """Multiple keywords with mixed non-word chars all work."""
+        sample_df.loc[0, "title"] = ".mzML and LC-MS data"
+        sample_df.loc[1, "title"] = "2+ charge states"
+        result = by_keywords(sample_df, ".mzML,LC-MS,2+")
+        assert "PXD000001" in result["dataset_id"].values
+        assert "PXD000002" in result["dataset_id"].values
+
+    def test_partial_match_still_blocked(self, sample_df):
+        """Non-word keywords still respect word boundaries where applicable."""
+        sample_df.loc[0, "title"] = "plasmid analysis"
+        result = by_keywords(sample_df, "plas")
+        assert "PXD000001" not in result["dataset_id"].values
 
 # ---------------------------------------------------------------------------
 # by_date_range
