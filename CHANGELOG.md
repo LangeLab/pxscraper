@@ -10,7 +10,34 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 
 ### Planned
 
-- Phase 4 (v0.4.4): Bug sweep (#5-#10), CLI output infrastructure, expanded test coverage.
+- CLI output infrastructure (`_output.py`), input validation hardening, expanded coverage.
+
+---
+
+## [0.4.4] - 2026-05-10
+
+### Fixed
+
+- HTML entities (`&amp;`, `&lt;`, `&gt;`, `&nbsp;`, `&#39;`, `&#x27;`, `&apos;`) now decoded in `strip_html` via `html.unescape()` (#5).
+- Cache `_metadata.json` corruption now backs up the corrupted file to `.bak` before recovering; metadata writes use atomic `.tmp` + `os.replace` to prevent partial-write corruption (#6).
+- Unsafe key access in `is_stale` — missing or empty metadata entries return `True` (stale) instead of crashing with `KeyError` (#7).
+- Keyword word boundaries (`\b`) now conditionally applied per side — keywords with leading/trailing non-word characters (`.mzML`, `+H`, `LC-MS`, `T-cell`) match correctly (#8).
+- Date coercion `NaT` count is now surfaced through `apply_filters()` summary dict for CLI warning (#9).
+- Lookup failure list truncated at 10 IDs with "and N more" suffix; full list shown in verbose mode (#10).
+
+### Added
+
+- 8 tests for HTML entity decoding in `strip_html`.
+- 2 tests for cache corruption backup and atomic write.
+- 2 tests for missing timestamp / empty entry staleness.
+- 6 tests for keyword boundary edge cases with non-word characters.
+- 5 tests for date coercion `nat_count` tracking.
+- 3 tests for lookup failure list truncation.
+
+### Changed
+
+- All source and test files formatted with `ruff format` for consistent style.
+- Line-length lint in `parse.py` fixed.
 
 ---
 

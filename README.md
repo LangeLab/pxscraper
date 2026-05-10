@@ -178,7 +178,7 @@ If you use pxseek in your work, please cite it:
   author = {Enes K. Ergin and Kimia Rostin and Philipp F. Lange},
   year = {2025},
   url = {https://github.com/LangeLab/pxseek},
-  version = {0.4.3},
+  version = {0.4.4},
 }
 ```
 

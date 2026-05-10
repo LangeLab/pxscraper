@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use pxseek in your work, please cite it."
 title: "pxseek: Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange"
 type: software
-version: 0.4.3
-date-released: 2026-05-09
+version: 0.4.4
+date-released: 2026-05-10
 url: "https://github.com/LangeLab/pxseek"
 authors:
   - family-names: "Ergin"

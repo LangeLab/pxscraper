@@ -1,6 +1,6 @@
 [project]
 name = "pxseek"
-version = "0.4.3"
+version = "0.4.4"
 description = "Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange"
 readme = "README.md"
 license = "MIT"
