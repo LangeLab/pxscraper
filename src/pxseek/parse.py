@@ -71,7 +71,8 @@ class ParseResult:
                 )
 
         if self.dropped_ids:
-            lines.append(f"  {len(self.dropped_ids)} row(s) dropped after parse (invalid dataset ID):")
+            lines.append(f"  {len(self.dropped_ids)} row(s) dropped after parse"
+                         " (invalid dataset ID):")
             n_show = min(len(self.dropped_ids), 5)
             for bogus in self.dropped_ids[:n_show]:
                 lines.append(f"    id={bogus!r}")
