@@ -138,7 +138,7 @@ XML files are cached on disk so repeated lookups do not re-download data. Remove
 # Install with dev dependencies
 uv sync --extra dev
 
-# Run tests (228 tests)
+# Run tests (236 tests)
 uv run pytest
 
 # Run tests with coverage
@@ -167,6 +167,22 @@ src/pxseek/
 ## Legacy
 
 The original single-file Selenium scraper is preserved in `legacy/proteomeXchange_scraper.py` for reference.
+
+## Citation
+
+If you use pxseek in your work, please cite it:
+
+```bibtex
+@software{pxseek2025,
+  title = {pxseek: Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange},
+  author = {Enes K. Ergin and Kimia Rostin and Philipp F. Lange},
+  year = {2025},
+  url = {https://github.com/LangeLab/pxseek},
+  version = {0.4.3},
+}
+```
+
+A `CITATION.cff` file is also available in the repository root.
 
 ## License
 

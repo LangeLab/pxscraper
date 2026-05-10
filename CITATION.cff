@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use pxseek in your work, please cite it."
+title: "pxseek: Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange"
+type: software
+version: 0.4.3
+date-released: 2026-05-09
+url: "https://github.com/LangeLab/pxseek"
+authors:
+  - family-names: "Ergin"
+    given-names: "Enes K."
+    affiliation: "University of British Columbia"
+    orcid: "https://orcid.org/0000-0001-9810-7399"
+  - family-names: "Rostin"
+    given-names: "Kimia"
+    affiliation: "University of British Columbia"
+  - family-names: "Lange"
+    given-names: "Philipp F."
+    affiliation: "University of British Columbia"
+    orcid: "https://orcid.org/0000-0003-1171-5864"
+license: "MIT"
+repository-code: "https://github.com/LangeLab/pxseek"
+keywords:
+  - data-parser
+  - proteomics
+  - proteomexchange
+  - metadata
+  - bioinformatics
