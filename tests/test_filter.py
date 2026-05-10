@@ -370,6 +370,30 @@ class TestApplyFilters:
         df, _ = apply_filters(sample_df, species="Homo sapiens")
         assert df is not sample_df
 
+    def test_date_nat_count_no_bad_dates(self, sample_df):
+        df, summary = apply_filters(sample_df, after="2024-01-01")
+        assert summary.get("nat_count") == 0
+
+    def test_date_nat_count_with_bad_dates(self, sample_df):
+        sample_df.loc[0, "announce_date"] = "not-a-date"
+        sample_df.loc[1, "announce_date"] = "also-bad"
+        df, summary = apply_filters(sample_df, after="2020-01-01")
+        assert summary.get("nat_count") == 2
+
+    def test_date_nat_count_all_bad(self, sample_df):
+        sample_df["announce_date"] = "garbage"
+        df, summary = apply_filters(sample_df, after="2020-01-01")
+        assert summary.get("nat_count") == 5
+
+    def test_date_nat_count_empty_date_col(self, sample_df):
+        sample_df["announce_date"] = None
+        df, summary = apply_filters(sample_df, after="2020-01-01")
+        assert summary.get("nat_count") == 5
+
+    def test_no_nat_count_when_no_date_filter(self, sample_df):
+        df, summary = apply_filters(sample_df, species="Homo sapiens")
+        assert "nat_count" not in summary
+
 
 # ---------------------------------------------------------------------------
 # edge cases

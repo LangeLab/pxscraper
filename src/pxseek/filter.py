@@ -107,6 +107,7 @@ def apply_filters(
       - original_count: rows before filtering
       - filtered_count: rows after filtering
       - active_filters: list of human-readable filter descriptions
+      - nat_count: number of unparseable dates dropped (only when date filter active)
     """
     original_count = len(df)
     active_filters: list[str] = []
@@ -125,6 +126,9 @@ def apply_filters(
         active_filters.append(f"keywords: {keywords}")
 
     if after or before:
+        nat_count = int(
+            pd.to_datetime(df["announce_date"], format="%Y-%m-%d", errors="coerce").isna().sum()
+        )
         df = by_date_range(df, after, before)
         parts = []
         if after:
@@ -137,10 +141,12 @@ def apply_filters(
         df = by_instrument(df, instrument)
         active_filters.append(f"instrument: {instrument}")
 
-    summary = {
+    summary: dict = {
         "original_count": original_count,
         "filtered_count": len(df),
         "active_filters": active_filters,
     }
+    if after or before:
+        summary["nat_count"] = nat_count
 
     return df, summary
