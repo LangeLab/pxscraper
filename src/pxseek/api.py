@@ -17,6 +17,9 @@ DATASET_XML_URL = (
     "https://proteomecentral.proteomexchange.org/cgi/GetDataset?outputMode=XML&ID={dataset_id}"
 )
 
+# Retry settings for XML fetches — exponential backoff (1s, 2s, 4s)
+XML_RETRY_BACKOFF = [1, 2, 4]
+
 
 def _session() -> requests.Session:
     """Create a requests Session with a polite User-Agent."""
@@ -43,18 +46,36 @@ def fetch_dataset_xml(
 ) -> str:
     """Download the XML metadata for a single PXD dataset.
 
-    Validates the dataset ID format before making the request.
-    Includes a polite delay before the request to avoid overloading
+    Retries up to 3 times with exponential backoff (1s, 2s, 4s) on
+    connection-level errors (ConnectionError, Timeout).  HTTP 4xx/5xx
+    responses are *not* retried.
+
+    Includes a polite delay before the first attempt to avoid overloading
     the ProteomeCentral server.
     """
     dataset_id = validate_pxd_id(dataset_id)
     if delay > 0:
         time.sleep(delay)
+
     s = session or _session()
     url = DATASET_XML_URL.format(dataset_id=dataset_id)
-    resp = s.get(url, timeout=HTTP_TIMEOUT)
-    resp.raise_for_status()
-    return resp.text
+    last_exc: Exception | None = None
+
+    for attempt in range(len(XML_RETRY_BACKOFF) + 1):
+        try:
+            resp = s.get(url, timeout=HTTP_TIMEOUT)
+            resp.raise_for_status()
+            return resp.text
+        except requests.HTTPError:
+            raise  # never retry 4xx/5xx
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            last_exc = exc
+            if attempt < len(XML_RETRY_BACKOFF):
+                wait = XML_RETRY_BACKOFF[attempt]
+                log.info("Retrying %s in %ss (attempt %d)", dataset_id, wait, attempt + 1)
+                time.sleep(wait)
+
+    raise last_exc  # type: ignore[union-attr]
 
 
 def fetch_datasets_xml(
