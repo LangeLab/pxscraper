@@ -9,22 +9,52 @@ import click
 from pxseek import __version__
 
 
-def _fetch_summary_safe(verbose=False):
-    """Fetch summary TSV from ProteomeCentral with friendly error handling."""
+def _stale_fallback_text(stale_df, cache_dir):
+    """Return stale cached data as TSV text with a warning to stderr."""
+    from datetime import datetime
+
+    from pxseek import cache
+
+    info = cache.cache_info("summary", cache_dir=cache_dir)
+    ts = ""
+    if info and "timestamp" in info:
+        ts = datetime.fromtimestamp(info["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
+    click.echo(
+        f"Warning: Could not reach ProteomeCentral, using cached data"
+        + (f" from {ts}" if ts else ""),
+        err=True,
+    )
+    return stale_df.to_csv(sep="\t", index=False)
+
+
+def _fetch_summary_safe(verbose=False, cache_dir=None):
+    """Fetch summary TSV from ProteomeCentral with friendly error handling.
+
+    On network failure, falls back to stale cache if available.
+    Returns raw TSV text (string).
+    """
     import requests
 
-    from pxseek import api
+    from pxseek import api, cache
 
     try:
         if verbose:
             click.echo("Downloading dataset listing from ProteomeCentral...")
         return api.fetch_summary()
     except requests.ConnectionError:
+        stale = cache.load("summary", cache_dir=cache_dir)
+        if stale is not None:
+            return _stale_fallback_text(stale, cache_dir)
         raise click.ClickException(
             "Could not reach ProteomeCentral. Check your network connection."
         )
     except requests.Timeout:
-        raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
+        stale = cache.load("summary", cache_dir=cache_dir)
+        if stale is not None:
+            return _stale_fallback_text(stale, cache_dir)
+        raise click.ClickException(
+            "Request to ProteomeCentral timed out. Try again later."
+        )
     except requests.HTTPError as exc:
         raise click.ClickException(f"ProteomeCentral returned an error: {exc}")
 
@@ -63,7 +93,7 @@ def fetch(output, cache_dir, refresh, verbose):
             return
 
     # Fetch from API
-    raw_tsv = _fetch_summary_safe(verbose)
+    raw_tsv = _fetch_summary_safe(verbose, cache_dir=cdir)
 
     if verbose:
         click.echo("Parsing TSV...")
@@ -194,7 +224,7 @@ def filter(
                 click.echo(f"Using cached data ({info['rows']} datasets)")
 
         if df is None:
-            raw_tsv = _fetch_summary_safe(verbose)
+            raw_tsv = _fetch_summary_safe(verbose, cache_dir=cdir)
 
             result = parse.parse_summary_tsv(raw_tsv)
             df = result.df
