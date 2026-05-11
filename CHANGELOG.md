@@ -14,6 +14,28 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 
 ---
 
+## [0.4.5] - 2026-05-10
+
+### Added
+
+- `--match-all` / `-a` flag for `pxseek filter`: requires ALL keywords to match (AND logic). Default OR behaviour is preserved. Works with comma-separated keywords and keyword files (#14).
+- Stale cache fallback: on `ConnectionError` or `Timeout`, `pxseek fetch` and `pxseek filter` now serve cached data with a warning timestamp instead of aborting. Only raises an error when no cache exists at all (#12).
+- XML fetch retry: `fetch_dataset_xml` retries failed requests up to 3 times with exponential backoff (1s, 2s, 4s). Only connection-level errors are retried; HTTP 4xx/5xx fail immediately (#13).
+
+### Changed
+
+- `validate_pxd_id` now accepts RPXD reanalysis IDs alongside PXD. Partner-native IDs (MassIVE `MSV`, jPOST `JPST`, etc.) remain unsupported by the ProteomeCentral API (#11).
+- README header redesigned with centered layout and project badges (version, Python, license, tests, changelog, citation).
+- Version bumped to 0.4.5.
+
+### Added (tests)
+
+- 1 test for RPXD acceptance in `validate_pxd_id`.
+- 5 tests for `by_keywords` with `match_all=True` (AND logic, file support, single keyword equivalence, missing column).
+- 3 tests for `match_all` through `apply_filters`.
+
+---
+
 ## [0.4.4] - 2026-05-10
 
 ### Fixed
