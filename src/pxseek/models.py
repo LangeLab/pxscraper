@@ -43,15 +43,23 @@ USER_AGENT = f"pxseek/{__version__} (https://github.com/LangeLab/pxseek; academi
 # HTTP timeout in seconds
 HTTP_TIMEOUT = 60
 
-# PXD dataset ID pattern (e.g. PXD000001, PXD063194)
-PXD_ID_RE = re.compile(r"^PXD\d{6,}$")
+# PXD / RPXD dataset ID pattern (e.g. PXD000001, RPXD055697)
+PXD_ID_RE = re.compile(r"^(?:R)?PXD\d{6,}$")
 
 
 def validate_pxd_id(dataset_id: str) -> str:
-    """Validate and return a PXD dataset ID, or raise ValueError."""
+    """Validate and return a PXD or RPXD dataset ID, or raise ValueError.
+
+    The ProteomeCentral API only accepts PXD-prefixed (and reanalysis RPXD)
+    identifiers.  Partner-repository native IDs (MassIVE ``MSV``, jPOST
+    ``JPST``, etc.) are *not* recognised — those datasets must be looked up
+    by their PXD-mapped alias, if one exists.
+    """
     dataset_id = dataset_id.strip()
     if not PXD_ID_RE.match(dataset_id):
         raise ValueError(
-            f"Invalid dataset ID: {dataset_id!r} (expected format: PXD followed by 6+ digits)"
+            f"Invalid dataset ID: {dataset_id!r} "
+            f"(expected PXD or RPXD followed by 6+ digits; "
+            f"partner-native IDs are not supported by the API)"
         )
     return dataset_id

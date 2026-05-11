@@ -280,6 +280,10 @@ class TestValidatePxdId:
         with pytest.raises(ValueError):
             validate_pxd_id("PXD123")
 
+    def test_accepts_rpxd(self):
+        """Reanalysis RPXD IDs should be accepted (summary parser supports them)."""
+        assert validate_pxd_id("RPXD055697") == "RPXD055697"
+
     def test_rejects_non_pxd_prefix(self):
         with pytest.raises(ValueError):
             validate_pxd_id("MSV000001")
