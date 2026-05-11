@@ -225,6 +225,40 @@ class TestByKeywords:
         result = by_keywords(sample_df, "plas")
         assert "PXD000001" not in result["dataset_id"].values
 
+    def test_match_all_and_logic(self, sample_df):
+        """match_all=True: both keywords must appear in some column."""
+        # PXD1: title "Cancer proteomics study", keywords "cancer, proteomics,"
+        # PXD5: title "Cancer immunopeptidomics in mice", keywords "cancer, immunopeptidome,"
+        # Both have "cancer" in title/keywords, only PXD1 has "proteomics" in title
+        result = by_keywords(sample_df, "cancer,proteomics", match_all=True)
+        assert "PXD000001" in result["dataset_id"].values
+        assert "PXD000005" not in result["dataset_id"].values  # no "proteomics"
+
+    def test_match_all_no_match(self, sample_df):
+        """match_all=True: no row matches all keywords."""
+        result = by_keywords(sample_df, "cancer,yeast", match_all=True)
+        # PXD1 has cancer but not yeast; PXD4 has yeast but not cancer
+        assert len(result) == 0
+
+    def test_match_all_missing_column(self, sample_df):
+        """match_all=True: non-existent column is ignored (no crash)."""
+        result = by_keywords(sample_df, "cancer,proteomics", columns=["title", "nonexistent"], match_all=True)
+        assert "PXD000001" in result["dataset_id"].values
+
+    def test_match_all_single_keyword_equals_or(self, sample_df):
+        """match_all=True with one keyword behaves same as OR."""
+        result_and = by_keywords(sample_df, "cancer", match_all=True)
+        result_or = by_keywords(sample_df, "cancer", match_all=False)
+        assert list(result_and["dataset_id"]) == list(result_or["dataset_id"])
+
+    def test_match_all_from_file(self, sample_df, tmp_path):
+        """match_all=True works with keyword file."""
+        kw_file = tmp_path / "keywords.txt"
+        kw_file.write_text("cancer\nproteomics\n")
+        result = by_keywords(sample_df, str(kw_file), match_all=True)
+        assert "PXD000001" in result["dataset_id"].values
+        assert "PXD000005" not in result["dataset_id"].values
+
 
 # ---------------------------------------------------------------------------
 # by_date_range
@@ -388,6 +422,26 @@ class TestApplyFilters:
     def test_no_nat_count_when_no_date_filter(self, sample_df):
         df, summary = apply_filters(sample_df, species="Homo sapiens")
         assert "nat_count" not in summary
+
+    def test_match_all_in_apply_filters(self, sample_df):
+        """match_all=True through apply_filters uses AND logic."""
+        df, summary = apply_filters(sample_df, keywords="cancer,proteomics", match_all=True)
+        assert "PXD000001" in df["dataset_id"].values
+        assert "PXD000005" not in df["dataset_id"].values
+        assert "AND" in summary["active_filters"][0]
+
+    def test_match_all_false_uses_or(self, sample_df):
+        """match_all=False (default) uses OR logic."""
+        df, summary = apply_filters(sample_df, keywords="cancer,proteomics", match_all=False)
+        # PXD1 (cancer+proteomics), PXD5 (cancer)
+        assert "PXD000001" in df["dataset_id"].values
+        assert "PXD000005" in df["dataset_id"].values
+        assert "OR" in summary["active_filters"][0]
+
+    def test_match_all_no_keywords_unchanged(self, sample_df):
+        """match_all flag is ignored when keywords is None."""
+        df, summary = apply_filters(sample_df, species="Homo sapiens", match_all=True)
+        assert summary["filtered_count"] == 3
 
 
 # ---------------------------------------------------------------------------

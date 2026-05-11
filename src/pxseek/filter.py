@@ -27,10 +27,15 @@ def by_keywords(
     df: pd.DataFrame,
     keywords: str,
     columns: list[str] | None = None,
+    *,
+    match_all: bool = False,
 ) -> pd.DataFrame:
-    r"""Filter rows where any keyword matches in the specified columns.
+    r"""Filter rows where keywords match in the specified columns.
 
-    Keywords are matched using \b word boundaries, case-insensitive, OR logic.
+    By default, multiple keywords are combined with OR logic (any match).
+    When *match_all* is ``True``, all keywords must match (AND logic).
+
+    Keywords are matched using \b word boundaries, case-insensitive.
     If *keywords* is a path to an existing file, reads one keyword per line.
     Otherwise treats *keywords* as a comma-separated string.
     """
@@ -53,12 +58,25 @@ def by_keywords(
         right = r"\b" if kw[-1].isalnum() or kw[-1] == "_" else ""
         return f"{left}{escaped}{right}"
 
-    pattern = "|".join(_wrap(kw) for kw in kw_list)
-
-    mask = pd.Series(False, index=df.index)
-    for col in columns:
-        if col in df.columns:
-            mask = mask | df[col].str.contains(pattern, case=False, na=False, regex=True)
+    if match_all:
+        # AND logic: each keyword must match in at least one column
+        mask = pd.Series(True, index=df.index)
+        for kw in kw_list:
+            kw_mask = pd.Series(False, index=df.index)
+            pattern = _wrap(kw)
+            for col in columns:
+                if col in df.columns:
+                    kw_mask = kw_mask | df[col].str.contains(
+                        pattern, case=False, na=False, regex=True
+                    )
+            mask = mask & kw_mask
+    else:
+        # OR logic: any keyword matching in any column
+        pattern = "|".join(_wrap(kw) for kw in kw_list)
+        mask = pd.Series(False, index=df.index)
+        for col in columns:
+            if col in df.columns:
+                mask = mask | df[col].str.contains(pattern, case=False, na=False, regex=True)
 
     return df[mask].copy()
 
@@ -100,6 +118,7 @@ def apply_filters(
     after: str | None = None,
     before: str | None = None,
     instrument: str | None = None,
+    match_all: bool = False,
 ) -> tuple[pd.DataFrame, dict]:
     """Apply all active filters sequentially and return (filtered_df, summary).
 
@@ -108,6 +127,8 @@ def apply_filters(
       - filtered_count: rows after filtering
       - active_filters: list of human-readable filter descriptions
       - nat_count: number of unparseable dates dropped (only when date filter active)
+
+    When *match_all* is ``True``, keyword filters require all keywords to match.
     """
     original_count = len(df)
     active_filters: list[str] = []
@@ -122,8 +143,9 @@ def apply_filters(
 
     if keywords:
         cols = [c.strip() for c in keyword_columns.split(",")] if keyword_columns else None
-        df = by_keywords(df, keywords, cols)
-        active_filters.append(f"keywords: {keywords}")
+        df = by_keywords(df, keywords, cols, match_all=match_all)
+        mode = "AND" if match_all else "OR"
+        active_filters.append(f"keywords ({mode}): {keywords}")
 
     if after or before:
         nat_count = int(

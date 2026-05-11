@@ -149,6 +149,7 @@ def fetch(output, cache_dir, refresh, verbose):
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 @click.option("--deep", is_flag=True, help="Also search within dataset descriptions (fetches XML).")
+@click.option("--match-all", "-a", is_flag=True, help="Require ALL keywords to match (AND logic).")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt for --deep.")
 @click.option(
     "--delay",
@@ -170,6 +171,7 @@ def filter(
     cache_dir,
     verbose,
     deep,
+    match_all,
     yes,
     delay,
 ):
@@ -309,7 +311,8 @@ def filter(
         candidates_df = candidates_df.copy()
         candidates_df["description"] = candidates_df["dataset_id"].map(desc_map).fillna("")
         filtered_df = filt.by_keywords(
-            candidates_df, keywords, columns=["title", "keywords", "description"]
+            candidates_df, keywords, columns=["title", "keywords", "description"],
+            match_all=match_all,
         )
 
         # Report
@@ -329,6 +332,7 @@ def filter(
             after=after,
             before=before,
             instrument=instrument,
+            match_all=match_all,
         )
 
         filters_str = "; ".join(summary["active_filters"])
