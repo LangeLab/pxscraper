@@ -1,8 +1,20 @@
-# pxseek
+<!-- markdownlint-disable MD033 MD036 MD041 -->
+<p align="center">
+  <h1 align="center">pxseek</h1>
+</p>
 
-Query, filter, and retrieve proteomics dataset metadata from [ProteomeXchange](http://www.proteomexchange.org/).
+<p align="center">
+  Query, filter, and retrieve proteomics dataset metadata from <a href="http://www.proteomexchange.org/">ProteomeXchange</a>.
+</p>
 
-## Overview
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.4.5-8B5CF6?style=flat-square" alt="v0.4.5">
+  <img src="https://img.shields.io/badge/python-3.12+-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12+">
+  <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
+  <img src="https://img.shields.io/badge/tests-269%20passed-22C55E?style=flat-square" alt="269 tests">
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-Keep%20a%20Changelog-E05D44?style=flat-square" alt="Changelog"></a>
+  <a href="CITATION.cff"><img src="https://img.shields.io/badge/cite-CITATION.cff-0066CC?style=flat-square" alt="Citation"></a>
+</p>
 
 `pxseek` replaces the original Selenium-based web scraper with a clean, API-driven approach using the ProteomeCentral bulk TSV and per-dataset XML endpoints. No browser or ChromeDriver required.
 
@@ -72,6 +84,9 @@ uv run pxseek filter -r "PRIDE,MassIVE"
 # Filter by keywords (searched in title and keywords columns)
 uv run pxseek filter -k "cancer,proteomics"
 
+# Require ALL keywords to match (AND logic)
+uv run pxseek filter -k "proteasome,ubiquitin" -a
+
 # Filter by date range
 uv run pxseek filter --after 2024-01-01 --before 2024-12-31
 
@@ -90,7 +105,7 @@ uv run pxseek filter -i px_datasets.tsv -s "Mus musculus" -o mouse_datasets.tsv
 # Search specific columns for keywords
 uv run pxseek filter -k "brain" --keyword-columns "title"
 
-# Deep search — also search within dataset descriptions/abstracts (fetches XML)
+# Deep search - also search within dataset descriptions/abstracts (fetches XML)
 uv run pxseek filter -k "phosphoproteomics" --deep
 
 # Deep search with species pre-filter to minimise XML requests
@@ -102,7 +117,7 @@ uv run pxseek filter -k "glycoproteomics" --deep --yes
 
 When no `--input` is given, `filter` automatically uses cached data or downloads fresh data from ProteomeCentral.
 
-### `pxseek lookup` — fetch detailed XML metadata for specific datasets
+### `pxseek lookup` - fetch detailed XML metadata for specific datasets
 
 ```bash
 # Look up one or more IDs by flag
@@ -138,7 +153,7 @@ XML files are cached on disk so repeated lookups do not re-download data. Remove
 # Install with dev dependencies
 uv sync --extra dev
 
-# Run tests (236 tests)
+# Run tests (269 tests)
 uv run pytest
 
 # Run tests with coverage
@@ -161,7 +176,7 @@ src/pxseek/
 ├── parse.py         # TSV + XML parsing (HTML stripping, column mapping)
 ├── cache.py         # Local caching with staleness check
 ├── models.py        # Column names, constants, configuration
-└── filter.py        # DataFrame filtering logic (Phase 2)
+└── filter.py        # DataFrame filtering logic
 ```
 
 ## Legacy
@@ -178,7 +193,7 @@ If you use pxseek in your work, please cite it:
   author = {Enes K. Ergin and Kimia Rostin and Philipp F. Lange},
   year = {2025},
   url = {https://github.com/LangeLab/pxseek},
-  version = {0.4.4},
+  version = {0.4.5},
 }
 ```
 
