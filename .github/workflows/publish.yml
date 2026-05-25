@@ -11,6 +11,10 @@ on:
         options:
           - testpypi
           - pypi
+      ref:
+        description: Git ref to build from. Use a tag like v0.5.1 for manual PyPI publishes.
+        required: false
+        type: string
   release:
     types: [published]
 
@@ -23,9 +27,22 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Resolve publish ref
+        id: publish_ref
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            ref="${{ github.event.release.tag_name }}"
+          elif [[ -n "${{ inputs.ref }}" ]]; then
+            ref="${{ inputs.ref }}"
+          else
+            ref="${GITHUB_REF_NAME}"
+          fi
+
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
+          ref: ${{ steps.publish_ref.outputs.ref }}
 
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
@@ -34,7 +51,7 @@ jobs:
       - name: Validate publish ref
         if: github.event_name == 'workflow_dispatch' && inputs.repository == 'pypi'
         run: |
-          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "${{ steps.publish_ref.outputs.ref }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Manual PyPI publishes must run from a release tag like v0.5.1."
             exit 1
           fi
