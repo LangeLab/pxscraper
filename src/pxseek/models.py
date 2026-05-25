@@ -52,7 +52,7 @@ def validate_pxd_id(dataset_id: str) -> str:
 
     The ProteomeCentral API only accepts PXD-prefixed (and reanalysis RPXD)
     identifiers.  Partner-repository native IDs (MassIVE ``MSV``, jPOST
-    ``JPST``, etc.) are *not* recognised — those datasets must be looked up
+    ``JPST``, etc.) are *not* recognised, those datasets must be looked up
     by their PXD-mapped alias, if one exists.
     """
     dataset_id = dataset_id.strip()

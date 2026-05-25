@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 MD036 MD041 -->
+<!-- markdownlint-disable MD010 MD033 MD036 MD041 -->
 <p align="center">
   <h1 align="center">pxseek</h1>
 </p>
@@ -9,9 +9,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.4.5-8B5CF6?style=flat-square" alt="v0.4.5">
-  <img src="https://img.shields.io/badge/python-3.12+-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12+">
+  <img src="https://img.shields.io/badge/python-3.12--3.14-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12-3.14">
   <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
   <img src="https://img.shields.io/badge/tests-269%20passed-22C55E?style=flat-square" alt="269 tests">
+  <img src="https://img.shields.io/badge/status-beta-C17D10?style=flat-square" alt="Beta">
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-Keep%20a%20Changelog-E05D44?style=flat-square" alt="Changelog"></a>
   <a href="CITATION.cff"><img src="https://img.shields.io/badge/cite-CITATION.cff-0066CC?style=flat-square" alt="Citation"></a>
 </p>
@@ -28,7 +29,7 @@
 
 ## Installation
 
-Requires **Python 3.12+** and [uv](https://pypi.org/project/uv/) for package management.
+Requires **Python 3.12-3.14** and [uv](https://pypi.org/project/uv/) for package management.
 
 ```bash
 git clone https://github.com/LangeLab/pxseek.git
@@ -36,134 +37,49 @@ cd pxseek
 uv sync
 ```
 
-## Usage
+## CLI Quickstart
 
-### Fetch all datasets
-
-```bash
-# Download full ProteomeXchange listing (~50k datasets)
-uv run pxseek fetch
-
-# Custom output path
-uv run pxseek fetch -o my_datasets.tsv
-
-# Force re-download (bypass cache)
-uv run pxseek fetch --refresh
-
-# Verbose output
-uv run pxseek fetch -v
-```
-
-The output TSV has the following columns:
-
-| Column          | Description                                             |
-| --------------- | ------------------------------------------------------- |
-| `dataset_id`    | ProteomeXchange identifier (e.g. PXD063194)             |
-| `title`         | Dataset title                                           |
-| `repository`    | Hosting repository (PRIDE, MassIVE, jPOST, iProX, etc.) |
-| `species`       | Species name(s)                                         |
-| `instrument`    | Instrument type(s)                                      |
-| `publication`   | Associated publication(s)                               |
-| `lab_head`      | Lab head / PI                                           |
-| `announce_date` | Date the dataset was announced                          |
-| `keywords`      | Dataset keywords                                        |
-
-### Caching
-
-Fetched data is cached locally in `.pxseek_cache/` (in the current directory) for 24 hours. Subsequent runs use the cache for instant results. Use `--refresh` to force a fresh download, or `--cache-dir` to specify an alternative cache location.
-
-### Filter datasets
+The shortest useful workflow is:
 
 ```bash
-# Filter by species (regex)
-uv run pxseek filter -s "Homo sapiens"
-
-# Filter by repository
-uv run pxseek filter -r "PRIDE,MassIVE"
-
-# Filter by keywords (searched in title and keywords columns)
-uv run pxseek filter -k "cancer,proteomics"
-
-# Require ALL keywords to match (AND logic)
-uv run pxseek filter -k "proteasome,ubiquitin" -a
-
-# Filter by date range
-uv run pxseek filter --after 2024-01-01 --before 2024-12-31
-
-# Filter by instrument (regex)
-uv run pxseek filter --instrument "Orbitrap|timsTOF"
-
-# Combine multiple filters
-uv run pxseek filter -s "Homo sapiens" -r PRIDE -k "cancer" --after 2024-01-01
-
-# Use a keyword file (one keyword per line)
-uv run pxseek filter -k keywords.txt
-
-# Filter from a previously fetched file
-uv run pxseek filter -i px_datasets.tsv -s "Mus musculus" -o mouse_datasets.tsv
-
-# Search specific columns for keywords
-uv run pxseek filter -k "brain" --keyword-columns "title"
-
-# Deep search - also search within dataset descriptions/abstracts (fetches XML)
-uv run pxseek filter -k "phosphoproteomics" --deep
-
-# Deep search with species pre-filter to minimise XML requests
-uv run pxseek filter -s "Homo sapiens" -k "ubiquitylation" --deep
-
-# Deep search with confirmation prompt skipped
-uv run pxseek filter -k "glycoproteomics" --deep --yes
+uv run pxseek fetch -o px_datasets.tsv
+uv run pxseek filter -i px_datasets.tsv -s "Homo sapiens" -k "cancer" -o shortlist.tsv
+uv run pxseek lookup --input shortlist.tsv -o detailed.tsv
 ```
 
-When no `--input` is given, `filter` automatically uses cached data or downloads fresh data from ProteomeCentral.
+This gives you:
 
-### `pxseek lookup` - fetch detailed XML metadata for specific datasets
+- `px_datasets.tsv`: the cleaned summary table
+- `shortlist.tsv`: your filtered subset
+- `detailed.tsv`: detailed XML-derived metadata for the shortlist
 
-```bash
-# Look up one or more IDs by flag
-uv run pxseek lookup --ids PXD000001
+One rule matters most:
 
-# Multiple IDs (comma-separated)
-uv run pxseek lookup --ids PXD000001,PXD000002,PXD000003
+- `filter` expects the cleaned TSV written by `pxseek fetch`, not the raw ProteomeCentral export.
 
-# Read IDs from a file (one per line)
-uv run pxseek lookup --ids-file my_ids.txt
+Use the docs for everything beyond that minimal path.
 
-# Pipeline: feed filter output directly into lookup
-uv run pxseek filter -s "Homo sapiens" -o filtered.tsv
-uv run pxseek lookup --input filtered.tsv -o detailed.tsv
+## Documentation
 
-# Skip confirmation prompt (useful in scripts)
-uv run pxseek lookup --ids PXD000001 --yes
+Detailed usage and examples live in the docs pages:
 
-# Custom request delay (default: 1.0 s)
-uv run pxseek lookup --ids PXD000001 --delay 2.0
-
-# Custom cache directory
-uv run pxseek lookup --ids PXD000001 --cache-dir /data/cache
-```
-
-`lookup` outputs a TSV with one row per dataset containing 19 fields: `dataset_id`, `title`, `description`, `species`, `instruments`, `modifications`, `keywords`, `review_level`, `announce_date`, `repository`, `submitter_name`, `submitter_email`, `submitter_affiliation`, `lab_head_name`, `lab_head_email`, `lab_head_affiliation`, `pubmed_ids`, `dois`, and `ftp_location`.
-
-XML files are cached on disk so repeated lookups do not re-download data. Remove `.pxseek_cache/PXD*.xml` to force a fresh fetch.
+- [Installation](wiki/Installation.md)
+- [CLI Quickstart](wiki/CLI-Quickstart.md)
+- [Data Formats](wiki/Data-Formats.md)
+- [Search Recipes](wiki/Search-Recipes.md)
+- [Troubleshooting](wiki/Troubleshooting.md)
+- [FAQ](wiki/FAQ.md)
 
 ## Development
 
+The local development workflow matches CI.
+
 ```bash
-# Install with dev dependencies
 uv sync --extra dev
-
-# Run tests (269 tests)
-uv run pytest
-
-# Run tests with coverage
-uv run pytest --cov=pxseek --cov-report=term-missing
-
-# Lint
-uv run ruff check src/ tests/
-
-# Format check
-uv run ruff format --check src/ tests/
+uv run --extra dev pytest
+uv run --extra dev ruff check src/ tests/
+uv run --extra dev ruff format --check src/ tests/
+uv build
 ```
 
 ## Project structure

@@ -19,9 +19,9 @@ def _stale_fallback_text(stale_df, cache_dir):
     ts = ""
     if info and "timestamp" in info:
         ts = datetime.fromtimestamp(info["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
+    warning_text = "Warning: Could not reach ProteomeCentral, using cached data"
     click.echo(
-        f"Warning: Could not reach ProteomeCentral, using cached data"
-        + (f" from {ts}" if ts else ""),
+        warning_text + (f" from {ts}" if ts else ""),
         err=True,
     )
     return stale_df.to_csv(sep="\t", index=False)
@@ -52,9 +52,7 @@ def _fetch_summary_safe(verbose=False, cache_dir=None):
         stale = cache.load("summary", cache_dir=cache_dir)
         if stale is not None:
             return _stale_fallback_text(stale, cache_dir)
-        raise click.ClickException(
-            "Request to ProteomeCentral timed out. Try again later."
-        )
+        raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
     except requests.HTTPError as exc:
         raise click.ClickException(f"ProteomeCentral returned an error: {exc}")
 
@@ -311,7 +309,9 @@ def filter(
         candidates_df = candidates_df.copy()
         candidates_df["description"] = candidates_df["dataset_id"].map(desc_map).fillna("")
         filtered_df = filt.by_keywords(
-            candidates_df, keywords, columns=["title", "keywords", "description"],
+            candidates_df,
+            keywords,
+            columns=["title", "keywords", "description"],
             match_all=match_all,
         )
 
@@ -517,7 +517,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
         click.echo(msg, err=True)
 
     if not rows:
-        raise click.ClickException("No data to write — all lookups failed.")
+        raise click.ClickException("No data to write.. all lookups failed.")
 
     # ------------------------------------------------------------------ #
     # 7. Write output                                                       #
@@ -526,4 +526,4 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     result_df.to_csv(output, sep="\t", index=False)
     click.echo(f"Wrote {len(rows)} dataset(s) to {output}")
     if failed:
-        click.echo(f"({len(failed)} failed — see warnings above)")
+        click.echo(f"({len(failed)} failed. See warnings above)")

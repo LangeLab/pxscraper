@@ -242,7 +242,12 @@ class TestByKeywords:
 
     def test_match_all_missing_column(self, sample_df):
         """match_all=True: non-existent column is ignored (no crash)."""
-        result = by_keywords(sample_df, "cancer,proteomics", columns=["title", "nonexistent"], match_all=True)
+        result = by_keywords(
+            sample_df,
+            "cancer,proteomics",
+            columns=["title", "nonexistent"],
+            match_all=True,
+        )
         assert "PXD000001" in result["dataset_id"].values
 
     def test_match_all_single_keyword_equals_or(self, sample_df):

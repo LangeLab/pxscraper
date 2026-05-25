@@ -17,7 +17,7 @@ DATASET_XML_URL = (
     "https://proteomecentral.proteomexchange.org/cgi/GetDataset?outputMode=XML&ID={dataset_id}"
 )
 
-# Retry settings for XML fetches — exponential backoff (1s, 2s, 4s)
+# Retry settings for XML fetches, exponential backoff (1s, 2s, 4s)
 XML_RETRY_BACKOFF = [1, 2, 4]
 
 
@@ -90,7 +90,7 @@ def fetch_datasets_xml(
 
     For each ID, the XML is fetched with a polite *delay* between requests.
     If a single fetch fails (network error, HTTP error, timeout), the ID is
-    mapped to ``None`` and a warning is logged — the rest continue.
+    mapped to ``None`` and a warning is logged, the rest continue.
 
     On ``KeyboardInterrupt`` the partial results collected so far are returned
     so callers can still write whatever was already fetched.

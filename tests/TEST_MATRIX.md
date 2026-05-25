@@ -1,25 +1,36 @@
 # pxseek Test Matrix
 
-> **228 tests** across 6 modules | v0.4.1 | Python 3.12+
+> **269 tests** across 6 modules | v0.4.5 | Python 3.12+
+
+Current inventory snapshot from `pytest --collect-only` on 2026-05-25:
+
+| File                   | Tests |
+| ---------------------- | ----: |
+| `tests/test_api.py`    |    32 |
+| `tests/test_cache.py`  |    32 |
+| `tests/test_cli.py`    |    40 |
+| `tests/test_filter.py` |    71 |
+| `tests/test_lookup.py` |    30 |
+| `tests/test_parse.py`  |    64 |
 
 ---
 
-## test_parse.py (57 tests)
+## test_parse.py (64 tests)
 
 ### TestStripHtml (8)
 
 Validates the `strip_html()` utility that removes HTML tags (especially `<a>` anchors) from raw ProteomeCentral TSV cells.
 
-| #   | Test                          | What it verifies                                       | Expect | Why                                                           |
-| --- | ----------------------------- | ------------------------------------------------------ | ------ | ------------------------------------------------------------- |
-| 1   | `test_simple_anchor`          | Single `<a>` tag stripped, inner text kept             | pass   | Core use case — every dataset ID arrives wrapped in an anchor |
-| 2   | `test_nested_tags`            | `<b><a>` nesting stripped correctly                    | pass   | Publication cells sometimes have bold+anchor combos           |
-| 3   | `test_multiple_anchors`       | Two anchors in one cell both stripped                  | pass   | Publication field often has DOI + PubMed links                |
-| 4   | `test_plain_text_unchanged`   | Text without HTML passes through unchanged             | pass   | Most species/instrument cells have no HTML                    |
-| 5   | `test_empty_string`           | Empty string returns empty string                      | pass   | Guard against edge cases in sparse rows                       |
-| 6   | `test_non_string_passthrough` | `None` and `int` values returned as-is                 | pass   | pandas cells can be NaN/numeric — must not crash              |
-| 7   | `test_self_closing_tag`       | `<br/>` removed, surrounding text joined               | pass   | Occasional `<br/>` appears in free-text fields                |
-| 8   | `test_whitespace_stripping`   | Leading/trailing whitespace stripped after tag removal | pass   | Prevents invisible whitespace in cleaned data                 |
+| #   | Test                          | What it verifies                                       | Expect | Why                                                          |
+| --- | ----------------------------- | ------------------------------------------------------ | ------ | ------------------------------------------------------------ |
+| 1   | `test_simple_anchor`          | Single `<a>` tag stripped, inner text kept             | pass   | Core use case: every dataset ID arrives wrapped in an anchor |
+| 2   | `test_nested_tags`            | `<b><a>` nesting stripped correctly                    | pass   | Publication cells sometimes have bold+anchor combos          |
+| 3   | `test_multiple_anchors`       | Two anchors in one cell both stripped                  | pass   | Publication field often has DOI + PubMed links               |
+| 4   | `test_plain_text_unchanged`   | Text without HTML passes through unchanged             | pass   | Most species/instrument cells have no HTML                   |
+| 5   | `test_empty_string`           | Empty string returns empty string                      | pass   | Guard against edge cases in sparse rows                      |
+| 6   | `test_non_string_passthrough` | `None` and `int` values returned as-is                 | pass   | pandas cells can be NaN/numeric; must not crash              |
+| 7   | `test_self_closing_tag`       | `<br/>` removed, surrounding text joined               | pass   | Occasional `<br/>` appears in free-text fields               |
+| 8   | `test_whitespace_stripping`   | Leading/trailing whitespace stripped after tag removal | pass   | Prevents invisible whitespace in cleaned data                |
 
 ### TestParseSummaryTsv (9)
 
@@ -95,7 +106,7 @@ Boundary conditions: minimal XML, multi-species, empty inputs, invalid inputs, m
 
 ---
 
-## test_cli.py (32 tests)
+## test_cli.py (40 tests)
 
 ### TestCliBasics (3)
 
@@ -103,7 +114,7 @@ CLI entry point: `--version`, `--help`, subcommand discovery.
 
 | #   | Test              | What it verifies                                            | Expect | Why                          |
 | --- | ----------------- | ----------------------------------------------------------- | ------ | ---------------------------- |
-| 1   | `test_version`    | `--version` prints `0.4.1`                                  | pass   | Version pinned to release    |
+| 1   | `test_version`    | `--version` prints `0.4.5`                                  | pass   | Version pinned to release    |
 | 2   | `test_help`       | `--help` lists `fetch`, `filter`, `lookup`                  | pass   | All subcommands discoverable |
 | 3   | `test_fetch_help` | `fetch --help` shows `--output`, `--refresh`, `--cache-dir` | pass   | CLI options documented       |
 
@@ -124,9 +135,9 @@ End-to-end CLI fetch (mocked API, real file I/O via `tmp_path`).
 
 Residual integration stub: confirms `lookup` with no arguments exits with an error.
 
-| #   | Test                                   | What it verifies                    | Expect | Why                                              |
-| --- | -------------------------------------- | ----------------------------------- | ------ | ------------------------------------------------ |
-| 1   | `test_lookup_no_args_exits_with_error` | `lookup` with no IDs exits non-zero | pass   | Regression guard — full tests are in test_lookup |
+| #   | Test                                   | What it verifies                    | Expect | Why                                             |
+| --- | -------------------------------------- | ----------------------------------- | ------ | ----------------------------------------------- |
+| 1   | `test_lookup_no_args_exits_with_error` | `lookup` with no IDs exits non-zero | pass   | Regression guard: full tests are in test_lookup |
 
 ### TestFilterCommand (18)
 
@@ -157,16 +168,16 @@ End-to-end filter command (mocked API, real file I/O via `tmp_path`).
 
 End-to-end deep search (`filter --deep`), XML description matching via mocked API.
 
-| #   | Test                                          | What it verifies                                                | Expect | Why                                                |
-| --- | --------------------------------------------- | --------------------------------------------------------------- | ------ | -------------------------------------------------- |
-| 1   | `test_deep_finds_description_only_match`      | Keyword absent from title/keywords but in XML description found | pass   | Core deep-search use case                          |
-| 2   | `test_deep_no_match_excluded`                 | Keyword absent from all fields → no output rows                 | pass   | True negative: deep search doesn't inflate results |
-| 3   | `test_deep_requires_keywords`                 | `--deep` without `-k` exits with error                          | pass   | Guard against nonsensical invocation               |
-| 4   | `test_deep_output_has_description_column`     | Output TSV contains `description` column                        | pass   | Output enriched with XML data                      |
-| 5   | `test_deep_uses_xml_cache`                    | Pre-cached XML reused; `fetch_datasets_xml` not called          | pass   | Cache avoids redundant network requests            |
-| 6   | `test_deep_yes_skips_prompt`                  | `--yes` skips large-batch confirmation prompt                   | pass   | Non-interactive / scripting mode                   |
-| 7   | `test_deep_large_set_without_yes_prompts`     | Large candidate set triggers prompt; `n` aborts                 | pass   | User protected from accidental 5h fetch            |
-| 8   | `test_deep_connection_error_exits_friendly`   | `ConnectionError` during XML fetch → friendly message, no file  | pass   | Network errors handled cleanly                     |
+| #   | Test                                        | What it verifies                                                | Expect | Why                                                |
+| --- | ------------------------------------------- | --------------------------------------------------------------- | ------ | -------------------------------------------------- |
+| 1   | `test_deep_finds_description_only_match`    | Keyword absent from title/keywords but in XML description found | pass   | Core deep-search use case                          |
+| 2   | `test_deep_no_match_excluded`               | Keyword absent from all fields → no output rows                 | pass   | True negative: deep search doesn't inflate results |
+| 3   | `test_deep_requires_keywords`               | `--deep` without `-k` exits with error                          | pass   | Guard against nonsensical invocation               |
+| 4   | `test_deep_output_has_description_column`   | Output TSV contains `description` column                        | pass   | Output enriched with XML data                      |
+| 5   | `test_deep_uses_xml_cache`                  | Pre-cached XML reused; `fetch_datasets_xml` not called          | pass   | Cache avoids redundant network requests            |
+| 6   | `test_deep_yes_skips_prompt`                | `--yes` skips large-batch confirmation prompt                   | pass   | Non-interactive / scripting mode                   |
+| 7   | `test_deep_large_set_without_yes_prompts`   | Large candidate set triggers prompt; `n` aborts                 | pass   | User protected from accidental 5h fetch            |
+| 8   | `test_deep_connection_error_exits_friendly` | `ConnectionError` during XML fetch → friendly message, no file  | pass   | Network errors handled cleanly                     |
 
 ### TestFetchErrors (3)
 
@@ -188,7 +199,7 @@ Parse diagnostics surfaced in CLI output.
 
 ---
 
-## test_filter.py (53 tests)
+## test_filter.py (71 tests)
 
 ### TestBySpecies (7)
 
@@ -294,16 +305,16 @@ Boundary conditions: empty DataFrames, special characters, strict date format.
 
 ---
 
-## test_api.py (31 tests)
+## test_api.py (32 tests)
 
 ### TestSession (2)
 
 HTTP session construction and headers.
 
-| #   | Test                            | What it verifies                          | Expect | Why                                  |
-| --- | ------------------------------- | ----------------------------------------- | ------ | ------------------------------------ |
-| 1   | `test_user_agent_set`           | `User-Agent` header is set on the session | pass   | Polite scraping — identify ourselves |
-| 2   | `test_returns_session_instance` | Returns a `requests.Session` object       | pass   | API contract for callers             |
+| #   | Test                            | What it verifies                          | Expect | Why                                 |
+| --- | ------------------------------- | ----------------------------------------- | ------ | ----------------------------------- |
+| 1   | `test_user_agent_set`           | `User-Agent` header is set on the session | pass   | Polite scraping: identify ourselves |
+| 2   | `test_returns_session_instance` | Returns a `requests.Session` object       | pass   | API contract for callers            |
 
 ### TestFetchSummary (3)
 
@@ -331,7 +342,7 @@ Per-dataset XML download from the ProteomeCentral API.
 
 ### TestFetchDatasetsXml (10)
 
-Batch XML downloader — validates all IDs upfront, isolates per-ID errors.
+Batch XML downloader: validates all IDs upfront, isolates per-ID errors.
 
 | #   | Test                                        | What it verifies                                     | Expect | Why                                              |
 | --- | ------------------------------------------- | ---------------------------------------------------- | ------ | ------------------------------------------------ |
@@ -364,7 +375,7 @@ PXD ID validation used across all modules.
 
 ---
 
-## test_cache.py (28 tests)
+## test_cache.py (32 tests)
 
 ### TestGetCacheDir (3)
 
@@ -438,7 +449,7 @@ Per-dataset XML file cache (added v0.4.0). Immutable once written; never expires
 
 ---
 
-## test_lookup.py (27 tests)
+## test_lookup.py (30 tests)
 
 Integration tests for the `pxseek lookup` CLI command. All HTTP calls are mocked; no network required.
 
@@ -514,7 +525,7 @@ Error conditions and partial-failure handling.
 
 ---
 
-## test_parse.py — TestParseDatasetXmlNamespace (12, added v0.4.1)
+## test_parse.py - TestParseDatasetXmlNamespace (12, added v0.4.1)
 
 Regression tests confirming `parse_dataset_xml()` correctly extracts every field when the XML document declares a default namespace (`xmlns="http://proteomexchange.org/schema"`). Each test parses `SAMPLE_XML_WITH_NS` and checks one output key. These tests caught Bug B1 (namespace-unaware XPath in lxml).
 
@@ -547,4 +558,4 @@ Regression tests confirming `parse_dataset_xml()` correctly extracts every field
 | test_lookup.py |      27 |   yes    |    0    |         0         |
 | **Total**      | **236** | **yes**  |  **0**  |       **0**       |
 
-All tests are deterministic, offline (mocked HTTP), and use `tmp_path` for I/O — no network calls, no side effects.
+All tests are deterministic, offline (mocked HTTP), and use `tmp_path` for I/O; no network calls, no side effects.

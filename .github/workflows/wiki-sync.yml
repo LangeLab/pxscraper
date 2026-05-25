@@ -1,0 +1,55 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wiki/**'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify wiki push token
+        env:
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          if [ -z "$WIKI_PUSH_TOKEN" ]; then
+            echo "Missing WIKI_PUSH_TOKEN secret."
+            echo "Add a repository secret with permission to push to ${GITHUB_REPOSITORY}.wiki.git."
+            exit 1
+          fi
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Clone wiki repository
+        env:
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-publish
+
+      - name: Sync wiki files
+        run: |
+          rsync -av --delete --exclude '.git/' wiki/ wiki-publish/
+
+      - name: Commit and push changes
+        working-directory: wiki-publish
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No wiki changes to publish."
+            exit 0
+          fi
+
+          git add --all
+          git commit -m "Sync wiki from ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+          git push origin HEAD

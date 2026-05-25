@@ -195,7 +195,7 @@ class TestCorruptedMetadata:
 
 class TestIsStaleMissingTimestamp:
     def test_missing_timestamp_key_returns_stale(self, cache_dir, sample_df):
-        """Entry exists but has no 'timestamp' key — treated as stale."""
+        """Entry exists but has no 'timestamp' key, treated as stale."""
         from pxseek.cache import _read_meta, _write_meta
 
         save(sample_df, "notsaved_via_api", cache_dir=cache_dir)
@@ -205,7 +205,7 @@ class TestIsStaleMissingTimestamp:
         assert is_stale("notsaved_via_api", cache_dir=cache_dir) is True
 
     def test_empty_entry_returns_stale(self, cache_dir):
-        """Entry is {} — treated as stale."""
+        """Entry is {}, treated as stale."""
         from pxseek.cache import _read_meta, _write_meta
 
         meta = _read_meta(cache_dir)

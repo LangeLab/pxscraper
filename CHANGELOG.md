@@ -42,8 +42,8 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 
 - HTML entities (`&amp;`, `&lt;`, `&gt;`, `&nbsp;`, `&#39;`, `&#x27;`, `&apos;`) now decoded in `strip_html` via `html.unescape()` (#5).
 - Cache `_metadata.json` corruption now backs up the corrupted file to `.bak` before recovering; metadata writes use atomic `.tmp` + `os.replace` to prevent partial-write corruption (#6).
-- Unsafe key access in `is_stale` — missing or empty metadata entries return `True` (stale) instead of crashing with `KeyError` (#7).
-- Keyword word boundaries (`\b`) now conditionally applied per side — keywords with leading/trailing non-word characters (`.mzML`, `+H`, `LC-MS`, `T-cell`) match correctly (#8).
+- Unsafe key access in `is_stale`: missing or empty metadata entries return `True` (stale) instead of crashing with `KeyError` (#7).
+- Keyword word boundaries (`\b`) now conditionally applied per side: keywords with leading/trailing non-word characters (`.mzML`, `+H`, `LC-MS`, `T-cell`) match correctly (#8).
 - Date coercion `NaT` count is now surfaced through `apply_filters()` summary dict for CLI warning (#9).
 - Lookup failure list truncated at 10 IDs with "and N more" suffix; full list shown in verbose mode (#10).
 

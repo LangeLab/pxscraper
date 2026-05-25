@@ -434,7 +434,7 @@ class TestParseEdgeCases:
 
 
 # ---------------------------------------------------------------------------
-# Bug B1 — XML with default namespace
+# Bug B1: XML with default namespace
 # parse_dataset_xml must work when the XML root declares xmlns="..."
 # (real ProteomeXchange XML files use this in some format versions)
 # ---------------------------------------------------------------------------
