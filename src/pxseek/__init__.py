@@ -1,6 +1,6 @@
 """pxseek: Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange."""
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 from pxseek.artifacts import read_artifact, render_artifact, write_artifact
 from pxseek.workflow import (

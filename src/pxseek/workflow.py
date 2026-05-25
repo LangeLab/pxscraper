@@ -63,6 +63,14 @@ def _resolve_cache_dir(cache_dir: Path | str | None) -> Path:
     return cache.get_cache_dir(Path(cache_dir))
 
 
+def _extract_description(raw_xml: str) -> str | None:
+    """Return the dataset description from raw XML, or ``None`` if parsing fails."""
+    try:
+        return parse.parse_dataset_xml(raw_xml).get("description", "")
+    except Exception:
+        return None
+
+
 def _validate_filters(
     *,
     species: str | None = None,
@@ -238,7 +246,9 @@ def filter_datasets(
     for dataset_id in cached_ids:
         raw_xml = cache.load_xml(dataset_id, cache_dir=resolved_cache_dir)
         if raw_xml is not None:
-            description_map[dataset_id] = parse.parse_dataset_xml(raw_xml).get("description", "")
+            description = _extract_description(raw_xml)
+            if description is not None:
+                description_map[dataset_id] = description
 
     if uncached_ids:
         fetched = api.fetch_datasets_xml(uncached_ids, delay=delay)
@@ -246,7 +256,9 @@ def filter_datasets(
             if raw_xml is None:
                 continue
             cache.save_xml(dataset_id, raw_xml, cache_dir=resolved_cache_dir)
-            description_map[dataset_id] = parse.parse_dataset_xml(raw_xml).get("description", "")
+            description = _extract_description(raw_xml)
+            if description is not None:
+                description_map[dataset_id] = description
 
     candidates_df = candidates_df.copy()
     candidates_df["description"] = candidates_df["dataset_id"].map(description_map).fillna("")

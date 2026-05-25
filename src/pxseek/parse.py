@@ -36,6 +36,12 @@ def _preview_line(line: str, width: int = _PREVIEW_WIDTH) -> str:
     return compact[: width - 3] + "..."
 
 
+def _xpath_first(element: etree._Element, expression: str) -> str:
+    """Return the first XPath match for *expression*, or an empty string."""
+    values = element.xpath(expression)
+    return values[0] if values else ""
+
+
 @dataclass
 class SkippedLine:
     """Details about a single malformed row that was skipped."""
@@ -283,8 +289,7 @@ def parse_dataset_xml(raw_xml: str) -> dict[str, str]:
     result["description"] = desc.text.strip() if desc is not None and desc.text else ""
 
     # Review level
-    review_el = root.xpath(".//ReviewLevel/cvParam/@name")
-    result["review_level"] = review_el[0] if review_el else ""
+    result["review_level"] = _xpath_first(root, ".//ReviewLevel/cvParam/@name")
 
     # Species (may be multiple)
     species = root.xpath('.//SpeciesList/Species/cvParam[@name="taxonomy: scientific name"]/@value')
@@ -316,14 +321,14 @@ def parse_dataset_xml(raw_xml: str) -> dict[str, str]:
     # Contacts
     for contact in root.xpath(".//ContactList/Contact"):
         contact_id = contact.get("id", "")
-        name = contact.xpath('cvParam[@name="contact name"]/@value')
-        email = contact.xpath('cvParam[@name="contact email"]/@value')
-        affil = contact.xpath('cvParam[@name="contact affiliation"]/@value')
 
         prefix = "submitter" if contact_id == "project_submitter" else "lab_head"
-        result[f"{prefix}_name"] = name[0] if name else ""
-        result[f"{prefix}_email"] = email[0] if email else ""
-        result[f"{prefix}_affiliation"] = affil[0] if affil else ""
+        result[f"{prefix}_name"] = _xpath_first(contact, 'cvParam[@name="contact name"]/@value')
+        result[f"{prefix}_email"] = _xpath_first(contact, 'cvParam[@name="contact email"]/@value')
+        result[f"{prefix}_affiliation"] = _xpath_first(
+            contact,
+            'cvParam[@name="contact affiliation"]/@value',
+        )
 
     # Publications
     pmids = root.xpath('.//PublicationList/Publication/cvParam[@name="PubMed identifier"]/@value')
@@ -335,9 +340,9 @@ def parse_dataset_xml(raw_xml: str) -> dict[str, str]:
     result["dois"] = "; ".join(dois)
 
     # FTP location
-    ftp = root.xpath(
-        './/FullDatasetLinkList/FullDatasetLink/cvParam[@name="Dataset FTP location"]/@value'
+    result["ftp_location"] = _xpath_first(
+        root,
+        './/FullDatasetLinkList/FullDatasetLink/cvParam[@name="Dataset FTP location"]/@value',
     )
-    result["ftp_location"] = ftp[0] if ftp else ""
 
     return result

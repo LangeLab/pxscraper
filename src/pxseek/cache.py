@@ -11,7 +11,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from pxseek.models import CACHE_DIR_NAME, CACHE_META_FILE, DEFAULT_CACHE_MAX_AGE_HOURS
+from pxseek.models import (
+    CACHE_DIR_NAME,
+    CACHE_META_FILE,
+    DEFAULT_CACHE_MAX_AGE_HOURS,
+    validate_pxd_id,
+)
 
 type CacheEntry = dict[str, float | int | str]
 type CacheMeta = dict[str, CacheEntry]
@@ -34,6 +39,8 @@ def get_cache_dir(base: Path | None = None) -> Path:
     By default, uses `.pxseek_cache/` in the current working directory.
     """
     base = base or Path.cwd()
+    if base.exists() and not base.is_dir():
+        raise ValueError(f"Cache directory base path is not a directory: {base}")
     cache_dir = base / CACHE_DIR_NAME
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
@@ -53,7 +60,7 @@ def _read_meta(cache_dir: Path) -> CacheMeta:
     meta_path = _meta_path(cache_dir)
     if meta_path.exists():
         try:
-            return json.loads(meta_path.read_text())
+            return json.loads(meta_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             backup = meta_path.with_suffix(".json.bak")
             meta_path.rename(backup)
@@ -64,7 +71,7 @@ def _read_meta(cache_dir: Path) -> CacheMeta:
 def _write_meta(cache_dir: Path, meta: CacheMeta) -> None:
     """Write cache metadata atomically to disk."""
     tmp = _meta_path(cache_dir).with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(meta, indent=2))
+    tmp.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     os.replace(tmp, _meta_path(cache_dir))
 
 
@@ -202,8 +209,6 @@ def save_xml(dataset_id: str, raw_xml: str, cache_dir: Path | None = None) -> Pa
 
     ProteomeXchange XML is immutable once published, so no TTL is tracked.
     """
-    from pxseek.models import validate_pxd_id
-
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()
     filepath = cache_dir / f"{dataset_id}.xml"
@@ -231,8 +236,6 @@ def load_xml(dataset_id: str, cache_dir: Path | None = None) -> str | None:
     ValueError
         If ``dataset_id`` is not a valid ``PXD`` or ``RPXD`` identifier.
     """
-    from pxseek.models import validate_pxd_id
-
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()
     filepath = cache_dir / f"{dataset_id}.xml"
@@ -261,8 +264,6 @@ def is_xml_cached(dataset_id: str, cache_dir: Path | None = None) -> bool:
     ValueError
         If ``dataset_id`` is not a valid ``PXD`` or ``RPXD`` identifier.
     """
-    from pxseek.models import validate_pxd_id
-
     dataset_id = validate_pxd_id(dataset_id)
     cache_dir = cache_dir or get_cache_dir()
     return (cache_dir / f"{dataset_id}.xml").exists()

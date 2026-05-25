@@ -173,6 +173,13 @@ class TestFetchDatasetsXml:
         result = fetch_datasets_xml([], delay=0)
         assert result == {}
 
+    def test_empty_list_does_not_create_session(self):
+        with patch("pxseek.api._session") as mock_session_fn:
+            result = fetch_datasets_xml([], delay=0)
+
+        assert result == {}
+        mock_session_fn.assert_not_called()
+
     def test_invalid_id_raises_before_any_request(self):
         mock_session = self._make_session()
         with pytest.raises(ValueError, match="Invalid dataset ID"):

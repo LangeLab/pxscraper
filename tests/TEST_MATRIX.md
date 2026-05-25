@@ -2,7 +2,7 @@
 
 # pxseek Test Matrix
 
-> **281 tests** across 8 modules | v0.5.0 | Python 3.12+
+> **281 tests** across 8 modules | v0.5.1 | Python 3.12+
 
 Current inventory snapshot from `pytest --collect-only` on 2026-05-25:
 
@@ -132,7 +132,7 @@ CLI entry point: `--version`, `--help`, subcommand discovery.
 
 | #   | Test              | What it verifies                                            | Expect | Why                          |
 | --- | ----------------- | ----------------------------------------------------------- | ------ | ---------------------------- |
-| 1   | `test_version`    | `--version` prints `0.5.0`                                  | pass   | Version pinned to release    |
+| 1   | `test_version`    | `--version` prints `0.5.1`                                  | pass   | Version pinned to release    |
 | 2   | `test_help`       | `--help` lists `fetch`, `filter`, `lookup`                  | pass   | All subcommands discoverable |
 | 3   | `test_fetch_help` | `fetch --help` shows `--output`, `--refresh`, `--cache-dir` | pass   | CLI options documented       |
 

@@ -1,9 +1,15 @@
-<!-- markdownlint-disable MD041 -->
+**Getting started**
 
 - [Home](Home)
 - [Installation](Installation)
 - [CLI Quickstart](CLI-Quickstart)
+
+**Reference**
+
 - [Python API](Python-API)
-- [Search Recipes](Search-Recipes)
 - [Data Formats](Data-Formats)
+- [Search Recipes](Search-Recipes)
+
+**Help**
+
 - [Troubleshooting and FAQ](Troubleshooting)

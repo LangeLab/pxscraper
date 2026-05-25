@@ -58,6 +58,13 @@ class TestGetCacheDir:
         cdir = get_cache_dir()
         assert cdir.name == CACHE_DIR_NAME
 
+    def test_existing_file_base_raises(self, tmp_path):
+        file_path = tmp_path / "not_a_dir"
+        file_path.write_text("x", encoding="utf-8")
+
+        with pytest.raises(ValueError, match="not a directory"):
+            get_cache_dir(file_path)
+
 
 # ---------------------------------------------------------------------------
 # save / load roundtrip

@@ -8,9 +8,30 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
-### Planned
+---
 
-- No unreleased changes yet.
+## [0.5.1] - 2026-05-25 - [Tagged]
+
+### Added
+
+- Real stdin artifact support for CLI workflows: `filter -i -` and `lookup --input -` can now consume TSV, CSV, or JSON artifacts from stdin, keeping the documented pipeline examples true.
+- Regression coverage for stdin artifact reads in shared helpers and end-to-end CLI stdin pipelines.
+- Regression coverage for malformed deep-search XML handling, invalid JSON artifact syntax and shape validation, empty batch API fetch behavior, and hostile artifact/cache path handling.
+
+### Changed
+
+- Internal code-quality pass across the core modules to remove duplicated control flow and centralize small helpers in artifact loading, workflow deep-search parsing, cache handling, CLI stale-cache fallback, XML parsing, keyword filtering, and batch API fetch flow.
+- Artifact auto-detection is now strict in `auto` mode: `.tsv`, `.csv`, `.json`, or no suffix are accepted, while unknown suffixes require an explicit format instead of silently defaulting to TSV.
+- Artifact writes now create missing parent directories automatically for nested output paths.
+
+### Fixed
+
+- Deep filtering in the CLI and workflow API no longer aborts the whole operation when one cached or fetched XML payload is malformed. Bad XML is skipped while valid datasets still flow through.
+- JSON artifact loading now fails early and consistently for invalid JSON syntax and invalid JSON shapes, instead of leaking raw parser or pandas errors.
+- Hostile artifact and cache path inputs now fail with friendly CLI errors instead of raw `IsADirectoryError` or `NotADirectoryError` exceptions.
+- Cache metadata JSON reads and writes now use explicit UTF-8 consistently.
+- Empty batch XML fetches now return immediately without creating an HTTP session or progress wrapper.
+- Trusted Publishing workflow now builds from a clean `dist/` directory, rejects manual PyPI publishes from non-tag refs, and pins the PyPI publish action to a concrete release commit.
 
 ---
 
@@ -199,3 +220,4 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 - Project scaffold: package structure, `pyproject.toml`, basic CLI skeleton.
 
 [0.5.0]: https://github.com/LangeLab/pxseek/releases/tag/v0.5.0
+[0.5.1]: https://github.com/LangeLab/pxseek/releases/tag/v0.5.1

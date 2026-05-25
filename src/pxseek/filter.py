@@ -12,6 +12,26 @@ import pandas as pd
 type FilterSummary = dict[str, int | list[str]]
 
 
+def _resolve_keywords(keywords: str) -> list[str]:
+    """Return keywords from a file path or comma-separated string."""
+    kw_path = Path(keywords)
+    if kw_path.is_file():
+        return [
+            line.strip()
+            for line in kw_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    return [keyword.strip() for keyword in keywords.split(",") if keyword.strip()]
+
+
+def _keyword_pattern(keyword: str) -> str:
+    """Return a regex pattern for a keyword with word boundaries where appropriate."""
+    escaped = re.escape(keyword)
+    left = r"\b" if keyword[0].isalnum() or keyword[0] == "_" else ""
+    right = r"\b" if keyword[-1].isalnum() or keyword[-1] == "_" else ""
+    return f"{left}{escaped}{right}"
+
+
 def by_species(df: pd.DataFrame, pattern: str) -> pd.DataFrame:
     """Filter rows where the species column matches a case-insensitive regex.
 
@@ -86,28 +106,17 @@ def by_keywords(
     if columns is None:
         columns = ["title", "keywords"]
 
-    # Resolve keyword list: file path or comma-separated
-    kw_path = Path(keywords)
-    if kw_path.is_file():
-        kw_list = [line.strip() for line in kw_path.read_text().splitlines() if line.strip()]
-    else:
-        kw_list = [k.strip() for k in keywords.split(",") if k.strip()]
+    kw_list = _resolve_keywords(keywords)
 
     if not kw_list:
         return df.copy()
-
-    def _wrap(kw: str) -> str:
-        escaped = re.escape(kw)
-        left = r"\b" if kw[0].isalnum() or kw[0] == "_" else ""
-        right = r"\b" if kw[-1].isalnum() or kw[-1] == "_" else ""
-        return f"{left}{escaped}{right}"
 
     if match_all:
         # AND logic: each keyword must match in at least one column
         mask = pd.Series(True, index=df.index)
         for kw in kw_list:
             kw_mask = pd.Series(False, index=df.index)
-            pattern = _wrap(kw)
+            pattern = _keyword_pattern(kw)
             for col in columns:
                 if col in df.columns:
                     kw_mask = kw_mask | df[col].str.contains(
@@ -116,7 +125,7 @@ def by_keywords(
             mask = mask & kw_mask
     else:
         # OR logic: any keyword matching in any column
-        pattern = "|".join(_wrap(kw) for kw in kw_list)
+        pattern = "|".join(_keyword_pattern(kw) for kw in kw_list)
         mask = pd.Series(False, index=df.index)
         for col in columns:
             if col in df.columns:

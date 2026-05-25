@@ -30,8 +30,24 @@ def _write_output(df: pd.DataFrame, output: str, output_format: str) -> str:
         click.echo(render_artifact(df, format=output_format), nl=False)
         return "stdout"
 
-    write_artifact(df, output, format=output_format)
+    try:
+        write_artifact(df, output, format=output_format)
+    except (OSError, ValueError) as exc:
+        raise click.ClickException(f"Could not write output file {output!r}: {exc}") from exc
     return output
+
+
+def _resolve_cache_dir_option(cache_dir: str | None) -> Path:
+    """Return the effective cache directory or raise a friendly CLI error."""
+    try:
+        cache_base = Path(cache_dir) if cache_dir else None
+        return cache.get_cache_dir(cache_base)
+    except (OSError, ValueError) as exc:
+        if cache_dir is not None:
+            raise click.ClickException(
+                f"Could not use cache directory {cache_dir!r}: {exc}"
+            ) from exc
+        raise click.ClickException(f"Could not initialize cache directory: {exc}") from exc
 
 
 def _stale_fallback_text(stale_df: pd.DataFrame, cache_dir: Path | None) -> str:
@@ -49,6 +65,14 @@ def _stale_fallback_text(stale_df: pd.DataFrame, cache_dir: Path | None) -> str:
     return stale_df.to_csv(sep="\t", index=False)
 
 
+def _stale_summary_or_raise(message: str, cache_dir: Path | None) -> str:
+    """Return stale cached summary TSV or raise a friendly CLI error."""
+    stale = cache.load("summary", cache_dir=cache_dir)
+    if stale is not None:
+        return _stale_fallback_text(stale, cache_dir)
+    raise click.ClickException(message)
+
+
 def _fetch_summary_safe(verbose: bool = False, cache_dir: Path | None = None) -> str:
     """Fetch summary TSV from ProteomeCentral with friendly error handling.
 
@@ -60,17 +84,15 @@ def _fetch_summary_safe(verbose: bool = False, cache_dir: Path | None = None) ->
             click.echo("Downloading dataset listing from ProteomeCentral...")
         return api.fetch_summary()
     except requests.ConnectionError:
-        stale = cache.load("summary", cache_dir=cache_dir)
-        if stale is not None:
-            return _stale_fallback_text(stale, cache_dir)
-        raise click.ClickException(
-            "Could not reach ProteomeCentral. Check your network connection."
+        return _stale_summary_or_raise(
+            "Could not reach ProteomeCentral. Check your network connection.",
+            cache_dir,
         )
     except requests.Timeout:
-        stale = cache.load("summary", cache_dir=cache_dir)
-        if stale is not None:
-            return _stale_fallback_text(stale, cache_dir)
-        raise click.ClickException("Request to ProteomeCentral timed out. Try again later.")
+        return _stale_summary_or_raise(
+            "Request to ProteomeCentral timed out. Try again later.",
+            cache_dir,
+        )
     except requests.HTTPError as exc:
         raise click.ClickException(f"ProteomeCentral returned an error: {exc}")
 
@@ -101,8 +123,7 @@ def main():
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 def fetch(output, output_format, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
-    cache_base = Path(cache_dir) if cache_dir else None
-    cdir = cache.get_cache_dir(cache_base)
+    cdir = _resolve_cache_dir_option(cache_dir)
 
     # Check cache
     if not refresh and not cache.is_stale("summary", cache_dir=cdir):
@@ -252,8 +273,7 @@ def filter(
             raise click.ClickException(f"Could not read input file {input_file!r}: {exc}")
     else:
         # Auto-fetch: use cache or download
-        cache_base = Path(cache_dir) if cache_dir else None
-        cdir = cache.get_cache_dir(cache_base)
+        cdir = _resolve_cache_dir_option(cache_dir)
 
         df = None
         if not cache.is_stale("summary", cache_dir=cdir):
@@ -299,7 +319,7 @@ def filter(
         )
 
         # Phase 2: fetch XML descriptions for all candidates
-        cdir = cache.get_cache_dir(Path(cache_dir) if cache_dir else None)
+        cdir = _resolve_cache_dir_option(cache_dir)
         if "dataset_id" not in candidates_df.columns:
             raise click.ClickException(
                 "Input data has no 'dataset_id' column. It is required for --deep."
@@ -323,7 +343,10 @@ def filter(
         for pid in cached_ids:
             raw = cache.load_xml(pid, cache_dir=cdir)
             if raw:
-                desc_map[pid] = parse.parse_dataset_xml(raw).get("description", "")
+                try:
+                    desc_map[pid] = parse.parse_dataset_xml(raw).get("description", "")
+                except Exception as exc:  # noqa: BLE001
+                    click.echo(f"Warning: could not parse XML for {pid}: {exc}", err=True)
 
         if to_fetch:
             try:
@@ -337,7 +360,10 @@ def filter(
             for pid, raw_xml in fetched.items():
                 if raw_xml is not None:
                     cache.save_xml(pid, raw_xml, cache_dir=cdir)
-                    desc_map[pid] = parse.parse_dataset_xml(raw_xml).get("description", "")
+                    try:
+                        desc_map[pid] = parse.parse_dataset_xml(raw_xml).get("description", "")
+                    except Exception as exc:  # noqa: BLE001
+                        click.echo(f"Warning: could not parse XML for {pid}: {exc}", err=True)
 
         # Phase 3: merge description column and re-filter on all text fields
         candidates_df = candidates_df.copy()
@@ -399,7 +425,7 @@ def filter(
     "--input",
     "input_file",
     default=None,
-    type=click.Path(exists=True),
+    type=click.Path(),
     help="Artifact from 'filter' or 'fetch': uses the dataset_id column.",
 )
 @click.option(
@@ -490,8 +516,7 @@ def lookup(ids, ids_file, input_file, output, output_format, delay, cache_dir, y
     # ------------------------------------------------------------------ #
     # 3. Cache: skip already-fetched IDs                                   #
     # ------------------------------------------------------------------ #
-    cache_base = Path(cache_dir) if cache_dir else None
-    cdir = cache.get_cache_dir(cache_base)
+    cdir = _resolve_cache_dir_option(cache_dir)
 
     cached_ids = [pid for pid in unique_ids if cache.is_xml_cached(pid, cache_dir=cdir)]
     to_fetch = [pid for pid in unique_ids if not cache.is_xml_cached(pid, cache_dir=cdir)]

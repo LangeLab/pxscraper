@@ -29,7 +29,7 @@ class TestCliBasics:
         runner = CliRunner()
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "0.5.0" in result.output
+        assert "0.5.1" in result.output
 
     def test_help(self):
         runner = CliRunner()
@@ -187,6 +187,42 @@ class TestFetchCommand:
         if stderr:
             assert "Fetched 2 datasets" in stderr
 
+    def test_fetch_creates_missing_output_parent_directories(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "nested" / "results" / "datasets.json"
+        cache_dir = tmp_path / "cache"
+
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
+            result = runner.invoke(
+                main,
+                [
+                    "fetch",
+                    "-o",
+                    str(output_file),
+                    "--format",
+                    "json",
+                    "--cache-dir",
+                    str(cache_dir),
+                ],
+            )
+
+        assert result.exit_code == 0, result.output
+        assert output_file.exists()
+
+    def test_fetch_unknown_output_suffix_errors_cleanly(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "datasets.txt"
+        cache_dir = tmp_path / "cache"
+
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
+            result = runner.invoke(
+                main,
+                ["fetch", "-o", str(output_file), "--cache-dir", str(cache_dir)],
+            )
+
+        assert result.exit_code != 0
+        assert "Unknown artifact file suffix" in result.output
+
 
 # ---------------------------------------------------------------------------
 # stubs (lookup is now fully implemented; basic smoke test lives in test_lookup.py)
@@ -253,6 +289,27 @@ class TestFilterCommand:
         )
         assert result.exit_code == 0, result.output
         assert "Filtered 2 -> 1" in result.output
+        df = pd.read_csv(output_file, sep="\t")
+        assert len(df) == 1
+        assert df.iloc[0]["dataset_id"] == "PXD000001"
+
+    def test_filter_reads_tsv_from_stdin(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "filtered.tsv"
+        input_text = (
+            "dataset_id\ttitle\trepository\tspecies\tinstrument\t"
+            "publication\tlab_head\tannounce_date\tkeywords\n"
+            "PXD000001\tTest\tPRIDE\tHomo sapiens\tOrbitrap\tno pub\tDoe\t2025-01-01\ttest,\n"
+            "PXD000002\tMouse\tPRIDE\tMus musculus\tOrbitrap\tno pub\tDoe\t2025-02-01\tmouse,\n"
+        )
+
+        result = runner.invoke(
+            main,
+            ["filter", "-i", "-", "-o", str(output_file), "-s", "Homo"],
+            input=input_text,
+        )
+
+        assert result.exit_code == 0, result.output
         df = pd.read_csv(output_file, sep="\t")
         assert len(df) == 1
         assert df.iloc[0]["dataset_id"] == "PXD000001"
@@ -594,6 +651,51 @@ class TestFetchErrors:
         assert result.exit_code != 0
         assert "error" in result.output.lower()
 
+    def test_fetch_output_directory_error_is_friendly(self, tmp_path):
+        runner = CliRunner()
+        output_dir = tmp_path / "outdir"
+        output_dir.mkdir()
+        cache_dir = tmp_path / "cache"
+
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
+            result = runner.invoke(
+                main,
+                ["fetch", "-o", str(output_dir), "--cache-dir", str(cache_dir)],
+            )
+
+        assert result.exit_code != 0
+        assert "Could not write output file" in result.output
+
+    def test_fetch_cache_dir_file_error_is_friendly(self, tmp_path):
+        runner = CliRunner()
+        output_file = tmp_path / "result.tsv"
+        cache_file = tmp_path / "cache_file"
+        cache_file.write_text("x", encoding="utf-8")
+
+        result = runner.invoke(
+            main,
+            ["fetch", "-o", str(output_file), "--cache-dir", str(cache_file)],
+        )
+
+        assert result.exit_code != 0
+        assert "Could not use cache directory" in result.output
+
+
+class TestFilterInputErrors:
+    def test_filter_input_directory_error_is_friendly(self, tmp_path):
+        runner = CliRunner()
+        input_dir = tmp_path / "input_dir"
+        input_dir.mkdir()
+        output_file = tmp_path / "filtered.tsv"
+
+        result = runner.invoke(
+            main,
+            ["filter", "-i", str(input_dir), "-o", str(output_file), "-s", "Homo"],
+        )
+
+        assert result.exit_code != 0
+        assert "Could not read input file" in result.output
+
 
 # ---------------------------------------------------------------------------
 # parse diagnostics in CLI output
@@ -911,3 +1013,35 @@ class TestFilterDeep:
         assert result.exit_code != 0
         assert "Could not reach ProteomeCentral" in result.output
         assert not output_file.exists()
+
+    def test_deep_skips_malformed_xml(self, tmp_path):
+        """Malformed XML for one dataset should not crash the whole deep search."""
+        input_file = self._write_input(tmp_path)
+        output_file = tmp_path / "out.tsv"
+        xml_map = {
+            "PXD000001": "not xml",
+            "PXD000002": self._xml("PXD000002", "A phosphoproteomics study in mice."),
+        }
+
+        with patch("pxseek.api.fetch_datasets_xml", return_value=xml_map):
+            result = CliRunner().invoke(
+                main,
+                [
+                    "filter",
+                    "-i",
+                    str(input_file),
+                    "-o",
+                    str(output_file),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                    "-k",
+                    "phosphoproteomics",
+                    "--deep",
+                    "--yes",
+                ],
+            )
+
+        assert result.exit_code == 0, result.output
+        assert "could not parse XML for PXD000001" in result.output
+        df = pd.read_csv(output_file, sep="\t")
+        assert list(df["dataset_id"]) == ["PXD000002"]

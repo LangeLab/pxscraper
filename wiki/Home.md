@@ -1,31 +1,36 @@
-# pxseek Wiki
+# pxseek
 
-This wiki is the user-facing documentation set for `pxseek`.
+Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange. No browser required.
 
-## Start here
+## What it does
 
-- [Installation](Installation)
-- [CLI Quickstart](CLI-Quickstart)
-- [Python API](Python-API)
-- [Search Recipes](Search-Recipes)
-- [Data Formats](Data-Formats)
-- [Troubleshooting and FAQ](Troubleshooting)
+ProteomeXchange holds tens of thousands of mass spectrometry proteomics datasets across partner repositories like PRIDE, MassIVE, and jPOST. Each dataset has a summary record (title, species, instrument, keywords) and a detailed XML record (description, contacts, publications, FTP links).
 
-## Recommended first path
+pxseek gives you three commands that mirror how researchers actually search:
 
-1. Install `pxseek`.
-2. Run the three-step workflow: `fetch`, `filter`, then `lookup`.
-3. Use Search Recipes when you want a biologically focused starting point.
-4. Use Data Formats or Troubleshooting and FAQ when you need more detail.
+1. **fetch** downloads the full summary listing as a clean table.
+2. **filter** narrows that table by species, repository, keywords, date range, or instrument.
+3. **lookup** pulls the detailed XML metadata for just the datasets you care about.
 
-## Core idea
+The whole thing works through the ProteomeCentral API. No Selenium, no ChromeDriver, no browser at all.
 
-`pxseek` helps you search ProteomeXchange dataset metadata without a browser workflow. The main pattern is simple:
+## Why not just browse ProteomeXchange?
 
-```bash
-pxseek fetch -o px_datasets.tsv
-pxseek filter -i px_datasets.tsv -s "Homo sapiens" -o human.tsv
-pxseek lookup --input human.tsv -o detailed.tsv
-```
+The ProteomeXchange web interface is good for one-off lookups but falls apart when you need to:
 
-Use the summary TSV for discovery. Use `lookup` on the final shortlist when you need richer metadata.
+- Search across thousands of datasets at once
+- Combine filters like species + keywords + instrument + date range
+- Feed results into a pipeline or script
+- Get structured data (TSV, CSV, JSON) instead of HTML pages
+
+pxseek fixes all of that.
+
+## One rule to remember
+
+`filter` expects the clean summary artifact that `pxseek fetch` produces, not the raw ProteomeCentral TSV export. Follow that rule and things just work.
+
+## Next steps
+
+- [Installation](Installation) to get pxseek running.
+- [CLI Quickstart](CLI-Quickstart) for the shortest useful workflow.
+- [Search Recipes](Search-Recipes) for biology-focused examples.

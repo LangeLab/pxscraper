@@ -256,6 +256,42 @@ class TestLookupHappyPath:
         assert len(payload) == 2
         assert payload[0]["dataset_id"] == "PXD000001"
 
+    def test_input_json_from_stdin_pipeline(self, runner, tmp_path):
+        out = tmp_path / "result.json"
+        cache_dir = tmp_path / "cache"
+        input_json = json.dumps(
+            [
+                {"dataset_id": "PXD000001", "title": "Foo"},
+                {"dataset_id": "PXD000002", "title": "Bar"},
+            ]
+        )
+
+        with patch(
+            "pxseek.api.fetch_datasets_xml",
+            return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
+        ):
+            result = runner.invoke(
+                main,
+                [
+                    "lookup",
+                    "--input",
+                    "-",
+                    "-o",
+                    str(out),
+                    "--format",
+                    "json",
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
+                input=input_json,
+            )
+
+        assert result.exit_code == 0, result.output
+        payload = json.loads(out.read_text(encoding="utf-8"))
+        assert len(payload) == 2
+        assert payload[1]["dataset_id"] == "PXD000002"
+
     def test_ids_combined_with_ids_file(self, runner, tmp_path, ids_file):
         """--ids and --ids-file sources are merged and deduplicated."""
         out = tmp_path / "result.tsv"

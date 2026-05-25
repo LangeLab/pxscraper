@@ -114,6 +114,23 @@ class TestFilterDatasets:
         assert "description" in filtered_df.columns
         assert "deep keywords: title, keywords, description" in summary["active_filters"]
 
+    def test_deep_filter_skips_malformed_xml(self, summary_df, tmp_path):
+        with patch(
+            "pxseek.workflow.api.fetch_datasets_xml",
+            return_value={"PXD000001": "not xml", "PXD000002": DETAIL_XML},
+        ):
+            filtered_df, summary = filter_datasets(
+                summary_df,
+                keywords="ubiquitylation",
+                deep=True,
+                cache_dir=tmp_path,
+                delay=0,
+            )
+
+        assert len(filtered_df) == 1
+        assert filtered_df.iloc[0]["dataset_id"] == "PXD000002"
+        assert summary["filtered_count"] == 1
+
 
 class TestLookupDatasets:
     def test_lookup_returns_rows_and_failed_ids(self, tmp_path):

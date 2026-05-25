@@ -1,24 +1,24 @@
 <!-- markdownlint-disable MD010 MD033 MD036 MD041 -->
 <p align="center">
-  <h1 align="center">pxseek</h1>
+  <img src="https://raw.githubusercontent.com/LangeLab/pxseek/main/assets/banner.svg" width="240" alt="pxseek"/>
 </p>
 
 <p align="center">
-  Query, filter, and retrieve proteomics dataset metadata from <a href="http://www.proteomexchange.org/">ProteomeXchange</a>.
+  Query, filter, and retrieve proteomics dataset metadata from <a href="https://www.proteomexchange.org/">ProteomeXchange</a>.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12--3.14-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12-3.14">
-  <img src="https://img.shields.io/badge/version-0.5.0-8B5CF6?style=flat-square" alt="v0.5.0">
+  <img src="https://img.shields.io/badge/version-0.5.1-8B5CF6?style=flat-square" alt="v0.5.1">
   <img src="https://img.shields.io/badge/status-beta-C17D10?style=flat-square" alt="Beta">
   <a href="https://github.com/LangeLab/pxseek/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LangeLab/pxseek/ci.yml?branch=main&style=flat-square&label=ci" alt="CI"></a>
-  <img src="https://img.shields.io/badge/tests-281%20collected-22C55E?style=flat-square" alt="281 tests collected">
+  <img src="https://img.shields.io/badge/tests-302%20passed-22C55E?style=flat-square" alt="302 tests passed">
   <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
 </p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-CHANGELOG-E05D44?style=flat-square" alt="Changelog"></a>
-  <a href="CITATION.cff"><img src="https://img.shields.io/badge/cite-CITATION.cff-0066CC?style=flat-square" alt="Citation"></a>
+  <a href="https://github.com/LangeLab/pxseek/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-CHANGELOG-E05D44?style=flat-square" alt="Changelog"></a>
+  <a href="https://github.com/LangeLab/pxseek/blob/main/CITATION.cff"><img src="https://img.shields.io/badge/cite-CITATION.cff-0066CC?style=flat-square" alt="Citation"></a>
   <a href="https://github.com/LangeLab/pxseek/wiki"><img src="https://img.shields.io/badge/docs-GitHub%20Wiki-0F766E?style=flat-square" alt="Wiki"></a>
 </p>
 
@@ -32,13 +32,19 @@
 
 ## Installation
 
-Requires **Python 3.12-3.14** and [uv](https://pypi.org/project/uv/) for package management.
+Requires **Python 3.12-3.14**.
 
 ```bash
-git clone https://github.com/LangeLab/pxseek.git
-cd pxseek
-uv sync
+pip install pxseek
 ```
+
+Or with `uv`:
+
+```bash
+uv tool install pxseek
+```
+
+For development setup and source checkout, see the [Installation](https://github.com/LangeLab/pxseek/wiki/Installation) guide.
 
 ## CLI Quickstart
 
@@ -72,12 +78,12 @@ The supported root imports are `fetch_datasets()`, `filter_datasets()`, `lookup_
 
 More detailed documentation and examples live in the [GitHub wiki](https://github.com/LangeLab/pxseek/wiki).
 
-- [Installation](wiki/Installation.md)
-- [CLI Quickstart](wiki/CLI-Quickstart.md)
-- [Python API](wiki/Python-API.md)
-- [Data Formats](wiki/Data-Formats.md)
-- [Search Recipes](wiki/Search-Recipes.md)
-- [Troubleshooting and FAQ](wiki/Troubleshooting.md)
+- [Installation](https://github.com/LangeLab/pxseek/wiki/Installation)
+- [CLI Quickstart](https://github.com/LangeLab/pxseek/wiki/CLI-Quickstart)
+- [Python API](https://github.com/LangeLab/pxseek/wiki/Python-API)
+- [Data Formats](https://github.com/LangeLab/pxseek/wiki/Data-Formats)
+- [Search Recipes](https://github.com/LangeLab/pxseek/wiki/Search-Recipes)
+- [Troubleshooting and FAQ](https://github.com/LangeLab/pxseek/wiki/Troubleshooting)
 
 ## Development
 
@@ -105,7 +111,7 @@ If you use pxseek in your work, please cite it:
   author = {Enes K. Ergin and Kimia Rostin and Philipp F. Lange},
   year = {2026},
   url = {https://github.com/LangeLab/pxseek},
-  version = {0.5.0},
+  version = {0.5.1},
 }
 ```
 
@@ -113,4 +119,4 @@ A `CITATION.cff` file is also available in the repository root.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](https://github.com/LangeLab/pxseek/blob/main/LICENSE) for details.

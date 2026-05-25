@@ -169,10 +169,12 @@ def fetch_datasets_xml(
     Returns a dict mapping each (validated) ID to the XML string, or ``None``
     on failure.
     """
-    from tqdm import tqdm
-
     # Validate all IDs upfront so caller learns about bad IDs before waiting.
     validated = [validate_pxd_id(i) for i in ids]
+    if not validated:
+        return {}
+
+    from tqdm import tqdm
 
     s = session or _session()
     results: dict[str, str | None] = {}
