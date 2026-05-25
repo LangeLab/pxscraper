@@ -353,8 +353,8 @@ def filter(
         meta_filters = "; ".join(pre_summary["active_filters"]) or "none"
         click.echo(
             f"Filtered {pre_summary['original_count']} -> {len(filtered_df)} datasets "
-            f"({meta_filters}; keywords in title/keywords/description)"
-            , err=(output == "-")
+            f"({meta_filters}; keywords in title/keywords/description)",
+            err=(output == "-"),
         )
     else:
         # Standard summary-level filter
@@ -373,8 +373,8 @@ def filter(
         filters_str = "; ".join(summary["active_filters"])
         click.echo(
             f"Filtered {summary['original_count']} -> {summary['filtered_count']} datasets "
-            f"({filters_str})"
-            , err=(output == "-")
+            f"({filters_str})",
+            err=(output == "-"),
         )
 
     if len(filtered_df) == 0:
