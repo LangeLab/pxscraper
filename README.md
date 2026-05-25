@@ -9,9 +9,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12--3.14-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12-3.14">
-  <img src="https://img.shields.io/badge/version-0.4.5-8B5CF6?style=flat-square" alt="v0.4.5">
+  <img src="https://img.shields.io/badge/version-0.5.0-8B5CF6?style=flat-square" alt="v0.5.0">
   <img src="https://img.shields.io/badge/status-beta-C17D10?style=flat-square" alt="Beta">
-  <img src="https://img.shields.io/badge/tests-269%20passed-22C55E?style=flat-square" alt="269 tests">
+  <a href="https://github.com/LangeLab/pxseek/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LangeLab/pxseek/ci.yml?branch=main&style=flat-square&label=ci" alt="CI"></a>
+  <img src="https://img.shields.io/badge/tests-281%20collected-22C55E?style=flat-square" alt="281 tests collected">
   <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
 </p>
 
@@ -23,13 +24,11 @@
 
 `pxseek` replaces the original Selenium-based web scraper with a clean, API-driven approach using the ProteomeCentral bulk TSV and per-dataset XML endpoints. No browser or ChromeDriver required.
 
-## Commands
+`pxseek` has three core commands.
 
-| Command         | Status        | Description                                                   |
-| --------------- | ------------- | ------------------------------------------------------------- |
-| `pxseek fetch`  | **Available** | Download the full dataset listing from ProteomeCentral        |
-| `pxseek filter` | **Available** | Filter datasets by species, repository, keywords, dates, etc. |
-| `pxseek lookup` | **Available** | Fetch detailed metadata for specific PXD identifiers          |
+- `fetch` downloads the clean summary table.
+- `filter` narrows that table by metadata.
+- `lookup` fetches richer XML-derived metadata for a shortlist.
 
 ## Installation
 
@@ -51,26 +50,31 @@ uv run pxseek filter -i px_datasets.tsv -s "Homo sapiens" -k "cancer" -o shortli
 uv run pxseek lookup --input shortlist.tsv -o detailed.tsv
 ```
 
-This gives you:
+One rule matters most. `filter` expects the cleaned artifact written by `pxseek fetch`, not the raw ProteomeCentral export.
 
-- `px_datasets.tsv`: the cleaned summary table
-- `shortlist.tsv`: your filtered subset
-- `detailed.tsv`: detailed XML-derived metadata for the shortlist
+If you want machine-friendly outputs, use `--format json` or `-o -` and keep the rest of the workflow the same. The detailed format and pipeline behavior live in the docs.
 
-One rule matters most:
+## Python API
 
-- `filter` expects the cleaned TSV written by `pxseek fetch`, not the raw ProteomeCentral export.
+`pxseek` is CLI-first, but it exposes a small stable workflow API for code that should not shell out to the CLI.
 
-Use the docs for everything beyond that minimal path.
+```python
+from pxseek import fetch_datasets, filter_datasets, lookup_datasets
+
+summary = fetch_datasets().df
+filtered, _ = filter_datasets(summary, species="Homo sapiens", keywords="cancer")
+details = lookup_datasets(filtered["dataset_id"]).df
+```
+
+The supported root imports are `fetch_datasets()`, `filter_datasets()`, `lookup_datasets()`, `read_artifact()`, `render_artifact()`, and `write_artifact()`.
 
 ## Documentation
 
 More detailed documentation and examples live in the [GitHub wiki](https://github.com/LangeLab/pxseek/wiki).
 
-The repository `wiki/` folder tracks the same pages in markdown:
-
 - [Installation](wiki/Installation.md)
 - [CLI Quickstart](wiki/CLI-Quickstart.md)
+- [Python API](wiki/Python-API.md)
 - [Data Formats](wiki/Data-Formats.md)
 - [Search Recipes](wiki/Search-Recipes.md)
 - [Troubleshooting and FAQ](wiki/Troubleshooting.md)
@@ -87,19 +91,6 @@ uv run --extra dev ruff format --check src/ tests/
 uv build
 ```
 
-## Project structure
-
-```bash
-src/pxseek/
-├── __init__.py      # Package version
-├── cli.py           # Click CLI entry point
-├── api.py           # ProteomeCentral API client (polite User-Agent, rate-limited)
-├── parse.py         # TSV + XML parsing (HTML stripping, column mapping)
-├── cache.py         # Local caching with staleness check
-├── models.py        # Column names, constants, configuration
-└── filter.py        # DataFrame filtering logic
-```
-
 ## Legacy
 
 The original single-file Selenium scraper is preserved in `legacy/proteomeXchange_scraper.py` for reference.
@@ -109,12 +100,12 @@ The original single-file Selenium scraper is preserved in `legacy/proteomeXchang
 If you use pxseek in your work, please cite it:
 
 ```bibtex
-@software{pxseek2025,
+@software{pxseek2026,
   title = {pxseek: Query, filter, and retrieve proteomics dataset metadata from ProteomeXchange},
   author = {Enes K. Ergin and Kimia Rostin and Philipp F. Lange},
-  year = {2025},
+  year = {2026},
   url = {https://github.com/LangeLab/pxseek},
-  version = {0.4.5},
+  version = {0.5.0},
 }
 ```
 

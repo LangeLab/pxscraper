@@ -14,6 +14,24 @@ import requests
 
 from pxseek import __version__, api, cache, models, parse
 from pxseek import filter as filt
+from pxseek.artifacts import read_artifact, render_artifact, write_artifact
+
+OUTPUT_FORMATS = click.Choice(["auto", "tsv", "csv", "json"], case_sensitive=False)
+
+
+def _echo_status(message: str, output: str) -> None:
+    """Write non-data CLI messages away from stdout when piping artifacts."""
+    click.echo(message, err=(output == "-"))
+
+
+def _write_output(df: pd.DataFrame, output: str, output_format: str) -> str:
+    """Write a DataFrame to disk or stdout using the shared artifact helpers."""
+    if output == "-":
+        click.echo(render_artifact(df, format=output_format), nl=False)
+        return "stdout"
+
+    write_artifact(df, output, format=output_format)
+    return output
 
 
 def _stale_fallback_text(stale_df: pd.DataFrame, cache_dir: Path | None) -> str:
@@ -64,7 +82,15 @@ def main():
 
 
 @main.command()
-@click.option("-o", "--output", default="px_datasets.tsv", help="Output file path.")
+@click.option("-o", "--output", default="px_datasets.tsv", help="Output path. Use '-' for stdout.")
+@click.option(
+    "--format",
+    "output_format",
+    default="auto",
+    show_default=True,
+    type=OUTPUT_FORMATS,
+    help="Output format. Auto-detects from --output suffix.",
+)
 @click.option(
     "--cache-dir",
     default=None,
@@ -73,7 +99,7 @@ def main():
 )
 @click.option("--refresh", is_flag=True, help="Force re-download even if cached.")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
-def fetch(output, cache_dir, refresh, verbose):
+def fetch(output, output_format, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
     cache_base = Path(cache_dir) if cache_dir else None
     cdir = cache.get_cache_dir(cache_base)
@@ -83,9 +109,12 @@ def fetch(output, cache_dir, refresh, verbose):
         df = cache.load("summary", cache_dir=cdir)
         info = cache.cache_info("summary", cache_dir=cdir)
         if df is not None:
-            click.echo(f"Using cached data ({info['rows']} datasets, from cache in {cdir})")
-            df.to_csv(output, sep="\t", index=False)
-            click.echo(f"Wrote {len(df)} datasets to {output}")
+            _echo_status(
+                f"Using cached data ({info['rows']} datasets, from cache in {cdir})",
+                output,
+            )
+            destination = _write_output(df, output, output_format)
+            _echo_status(f"Wrote {len(df)} datasets to {destination}", output)
             return
 
     # Fetch from API
@@ -98,24 +127,37 @@ def fetch(output, cache_dir, refresh, verbose):
 
     # Report parse diagnostics
     if result.skipped_count > 0 or result.dropped_ids:
-        click.echo(result.report())
+        _echo_status(result.report(), output)
     else:
         if verbose:
-            click.echo(f"Parsed {len(df)} datasets (no issues)")
+            _echo_status(f"Parsed {len(df)} datasets (no issues)", output)
 
     # Save to cache
     cache.save(df, "summary", cache_dir=cdir)
     if verbose:
-        click.echo(f"Cached {len(df)} datasets in {cdir}")
+        _echo_status(f"Cached {len(df)} datasets in {cdir}", output)
 
     # Write output
-    df.to_csv(output, sep="\t", index=False)
-    click.echo(f"Fetched {len(df)} datasets -> {output}")
+    destination = _write_output(df, output, output_format)
+    _echo_status(f"Fetched {len(df)} datasets -> {destination}", output)
 
 
 @main.command()
-@click.option("-i", "--input", "input_file", default=None, help="Input TSV from fetch.")
-@click.option("-o", "--output", default="filtered_datasets.tsv", help="Output file path.")
+@click.option("-i", "--input", "input_file", default=None, help="Input artifact from fetch.")
+@click.option(
+    "-o",
+    "--output",
+    default="filtered_datasets.tsv",
+    help="Output path. Use '-' for stdout.",
+)
+@click.option(
+    "--format",
+    "output_format",
+    default="auto",
+    show_default=True,
+    type=OUTPUT_FORMATS,
+    help="Output format. Auto-detects from --output suffix.",
+)
 @click.option("-s", "--species", default=None, help="Filter by species (regex).")
 @click.option("-r", "--repo", default=None, help="Filter by repository (e.g. PRIDE,MassIVE).")
 @click.option(
@@ -157,6 +199,7 @@ def fetch(output, cache_dir, refresh, verbose):
 def filter(
     input_file,
     output,
+    output_format,
     species,
     repo,
     keywords,
@@ -202,8 +245,11 @@ def filter(
     # --- Load input data ---
     if input_file:
         if verbose:
-            click.echo(f"Reading input from {input_file}")
-        df = pd.read_csv(input_file, sep="\t", dtype=str)
+            _echo_status(f"Reading input from {input_file}", output)
+        try:
+            df = read_artifact(input_file)
+        except Exception as exc:
+            raise click.ClickException(f"Could not read input file {input_file!r}: {exc}")
     else:
         # Auto-fetch: use cache or download
         cache_base = Path(cache_dir) if cache_dir else None
@@ -214,7 +260,7 @@ def filter(
             df = cache.load("summary", cache_dir=cdir)
             if df is not None and verbose:
                 info = cache.cache_info("summary", cache_dir=cdir)
-                click.echo(f"Using cached data ({info['rows']} datasets)")
+                _echo_status(f"Using cached data ({info['rows']} datasets)", output)
 
         if df is None:
             raw_tsv = _fetch_summary_safe(verbose, cache_dir=cdir)
@@ -223,7 +269,7 @@ def filter(
             df = result.df
             cache.save(df, "summary", cache_dir=cdir)
             if verbose:
-                click.echo(f"Fetched and cached {len(df)} datasets")
+                _echo_status(f"Fetched and cached {len(df)} datasets", output)
 
     # --- Check we have at least one filter ---
     has_filter = any([species, repo, keywords, after, before, instrument])
@@ -308,6 +354,7 @@ def filter(
         click.echo(
             f"Filtered {pre_summary['original_count']} -> {len(filtered_df)} datasets "
             f"({meta_filters}; keywords in title/keywords/description)"
+            , err=(output == "-")
         )
     else:
         # Standard summary-level filter
@@ -327,15 +374,16 @@ def filter(
         click.echo(
             f"Filtered {summary['original_count']} -> {summary['filtered_count']} datasets "
             f"({filters_str})"
+            , err=(output == "-")
         )
 
     if len(filtered_df) == 0:
-        click.echo("No datasets matched the given filters.")
+        _echo_status("No datasets matched the given filters.", output)
         return
 
     # --- Write output ---
-    filtered_df.to_csv(output, sep="\t", index=False)
-    click.echo(f"Wrote {len(filtered_df)} datasets to {output}")
+    destination = _write_output(filtered_df, output, output_format)
+    _echo_status(f"Wrote {len(filtered_df)} datasets to {destination}", output)
 
 
 @main.command()
@@ -352,9 +400,22 @@ def filter(
     "input_file",
     default=None,
     type=click.Path(exists=True),
-    help="TSV from 'filter' or 'fetch': uses the dataset_id column.",
+    help="Artifact from 'filter' or 'fetch': uses the dataset_id column.",
 )
-@click.option("-o", "--output", default="lookup_results.tsv", help="Output file path.")
+@click.option(
+    "-o",
+    "--output",
+    default="lookup_results.tsv",
+    help="Output path. Use '-' for stdout.",
+)
+@click.option(
+    "--format",
+    "output_format",
+    default="auto",
+    show_default=True,
+    type=OUTPUT_FORMATS,
+    help="Output format. Auto-detects from --output suffix.",
+)
 @click.option(
     "--delay",
     default=1.0,
@@ -375,7 +436,7 @@ def filter(
     help="Skip confirmation prompt.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
-def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
+def lookup(ids, ids_file, input_file, output, output_format, delay, cache_dir, yes, verbose):
     """Fetch detailed metadata for specific PXD identifiers."""
     # ------------------------------------------------------------------ #
     # 1. Collect IDs from all sources                                      #
@@ -394,7 +455,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
 
     if input_file:
         try:
-            tsv_df = pd.read_csv(input_file, sep="\t", dtype=str)
+            tsv_df = read_artifact(input_file)
         except Exception as exc:
             raise click.ClickException(f"Could not read input file {input_file!r}: {exc}")
         if "dataset_id" not in tsv_df.columns:
@@ -505,7 +566,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     # 7. Write output                                                       #
     # ------------------------------------------------------------------ #
     result_df = pd.DataFrame(rows)
-    result_df.to_csv(output, sep="\t", index=False)
-    click.echo(f"Wrote {len(rows)} dataset(s) to {output}")
+    destination = _write_output(result_df, output, output_format)
+    _echo_status(f"Wrote {len(rows)} dataset(s) to {destination}", output)
     if failed:
-        click.echo(f"({len(failed)} failed. See warnings above)")
+        _echo_status(f"({len(failed)} failed. See warnings above)", output)

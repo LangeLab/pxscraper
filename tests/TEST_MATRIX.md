@@ -1,17 +1,21 @@
+<!-- markdownlint-disable MD060 -->
+
 # pxseek Test Matrix
 
-> **269 tests** across 6 modules | v0.4.5 | Python 3.12+
+> **281 tests** across 8 modules | v0.5.0 | Python 3.12+
 
 Current inventory snapshot from `pytest --collect-only` on 2026-05-25:
 
 | File                   | Tests |
 | ---------------------- | ----: |
 | `tests/test_api.py`    |    32 |
+| `tests/test_artifacts.py` |     3 |
 | `tests/test_cache.py`  |    32 |
-| `tests/test_cli.py`    |    40 |
+| `tests/test_cli.py`    |    41 |
 | `tests/test_filter.py` |    71 |
-| `tests/test_lookup.py` |    30 |
+| `tests/test_lookup.py` |    31 |
 | `tests/test_parse.py`  |    64 |
+| `tests/test_workflow.py` |     7 |
 
 ---
 
@@ -106,7 +110,21 @@ Boundary conditions: minimal XML, multi-species, empty inputs, invalid inputs, m
 
 ---
 
-## test_cli.py (40 tests)
+## test_artifacts.py (3 tests)
+
+### Shared artifact helpers
+
+Validates the stable read, render, and write helpers used by the CLI and Python API.
+
+| #   | Test                                | What it verifies                     | Expect | Why                                  |
+| --- | ----------------------------------- | ------------------------------------ | ------ | ------------------------------------ |
+| 1   | `test_write_and_read_json_artifact` | JSON files round-trip via helpers    | pass   | Workflow artifacts need stable IO    |
+| 2   | `test_render_json_artifact_for_stdout` | JSON text is stdout-safe          | pass   | Pipelines need machine-readable text |
+| 3   | `test_write_csv_artifact`           | CSV file writing also round-trips    | pass   | CLI and API share the same formats   |
+
+---
+
+## test_cli.py (41 tests)
 
 ### TestCliBasics (3)
 
@@ -114,11 +132,11 @@ CLI entry point: `--version`, `--help`, subcommand discovery.
 
 | #   | Test              | What it verifies                                            | Expect | Why                          |
 | --- | ----------------- | ----------------------------------------------------------- | ------ | ---------------------------- |
-| 1   | `test_version`    | `--version` prints `0.4.5`                                  | pass   | Version pinned to release    |
+| 1   | `test_version`    | `--version` prints `0.5.0`                                  | pass   | Version pinned to release    |
 | 2   | `test_help`       | `--help` lists `fetch`, `filter`, `lookup`                  | pass   | All subcommands discoverable |
 | 3   | `test_fetch_help` | `fetch --help` shows `--output`, `--refresh`, `--cache-dir` | pass   | CLI options documented       |
 
-### TestFetchCommand (6)
+### TestFetchCommand (7)
 
 End-to-end CLI fetch (mocked API, real file I/O via `tmp_path`).
 
@@ -130,6 +148,7 @@ End-to-end CLI fetch (mocked API, real file I/O via `tmp_path`).
 | 4   | `test_fetch_refresh_bypasses_cache`   | `--refresh` forces re-download despite cache                | pass   | Users can force fresh data           |
 | 5   | `test_fetch_output_has_clean_columns` | Output has `dataset_id`, no `announcementXML` or raw names  | pass   | Column renaming and dropping applied |
 | 6   | `test_fetch_no_html_in_output`        | Output file contains no `<a` or `</a>`                      | pass   | HTML fully stripped before write     |
+| 7   | `test_fetch_json_stdout`              | JSON artifact goes to stdout without status pollution       | pass   | Shell workflows need clean stdout    |
 
 ### TestStubs (1)
 
@@ -196,6 +215,50 @@ Parse diagnostics surfaced in CLI output.
 | #   | Test                                         | What it verifies                                        | Expect | Why                           |
 | --- | -------------------------------------------- | ------------------------------------------------------- | ------ | ----------------------------- |
 | 1   | `test_fetch_reports_no_skipped_rows_verbose` | Verbose output includes "no rows skipped" on clean data | pass   | User sees parse health status |
+
+---
+
+## test_workflow.py (7 tests)
+
+### TestFetchDatasets (3)
+
+Validates the small documented workflow API entry point for fetching the clean summary table.
+
+| #   | Test                                           | What it verifies                         | Expect | Why                                      |
+| --- | ---------------------------------------------- | ---------------------------------------- | ------ | ---------------------------------------- |
+| 1   | `test_fetch_downloads_and_caches_summary`      | Downloaded summary is parsed and cached  | pass   | Workflow users need the same clean table |
+| 2   | `test_fetch_uses_fresh_cache_before_network`   | Fresh cache is used before network       | pass   | Reproducible workflow runs               |
+| 3   | `test_fetch_uses_stale_cache_on_connection_error` | Stale cache fallback works in API    | pass   | Mirrors the CLI reliability path         |
+
+### TestFilterDatasets (2)
+
+Validates the workflow wrapper around filtering, including deep description search.
+
+| #   | Test                                              | What it verifies                    | Expect | Why                               |
+| --- | ------------------------------------------------- | ----------------------------------- | ------ | --------------------------------- |
+| 1   | `test_standard_filter_returns_dataframe_and_summary` | Standard filter returns values | pass   | Workflow code needs direct values |
+| 2   | `test_deep_filter_uses_description_text`          | Deep search matches XML text        | pass   | Mirrors CLI `--deep` behaviour    |
+
+### TestLookupDatasets (2)
+
+Validates the workflow wrapper for lookup and ID validation.
+
+| #   | Test                                     | What it verifies                    | Expect | Why                                   |
+| --- | ---------------------------------------- | ----------------------------------- | ------ | ------------------------------------- |
+| 1   | `test_lookup_returns_rows_and_failed_ids` | Successful rows and failures return | pass   | Workflow code needs structured output |
+| 2   | `test_lookup_rejects_invalid_ids`         | Invalid IDs are rejected early      | pass   | Workflow code needs fast validation   |
+
+---
+
+## test_lookup.py (31 tests)
+
+### TestLookupHappyPath
+
+The lookup CLI now also accepts JSON artifacts produced by the shared helpers.
+
+| #   | Test                       | What it verifies                         | Expect | Why                                 |
+| --- | -------------------------- | ---------------------------------------- | ------ | ----------------------------------- |
+| 1   | `test_input_json_pipeline` | JSON input artifacts are accepted by CLI | pass   | Filter and lookup can share JSON IO |
 
 ---
 

@@ -4,13 +4,13 @@
 
 `pxseek` works in three stages:
 
-1. `fetch` downloads the ProteomeCentral summary listing as a clean TSV.
+1. `fetch` downloads the ProteomeCentral summary listing as a clean artifact.
 2. `filter` narrows that summary by metadata such as species, repository, keywords, dates, and instruments.
 3. `lookup` fetches detailed XML-derived metadata for one or more dataset IDs.
 
 If you only remember one rule, remember this one:
 
-- `filter` expects the clean summary TSV produced by `pxseek fetch`, not the raw ProteomeCentral TSV export.
+- `filter` expects the clean summary artifact produced by `pxseek fetch`, not the raw ProteomeCentral TSV export.
 
 ## First-time workflow
 
@@ -25,6 +25,18 @@ This gives you:
 - `px_datasets.tsv`: the clean summary table.
 - `human.tsv`: the filtered subset.
 - `detailed.tsv`: the lookup output with description, contacts, DOI, and FTP location.
+
+## Machine-friendly workflow
+
+If you want JSON artifacts for pipelines or notebooks, keep the same command order and change only the format.
+
+```bash
+pxseek fetch --format json -o px_datasets.json
+pxseek filter -i px_datasets.json -s "Homo sapiens" -o human.json
+pxseek lookup --input human.json --format json -o detailed.json
+```
+
+If you need stdout for shell pipelines, use `-o -`. Artifact content goes to stdout and status lines go to stderr.
 
 ## Common command patterns
 
@@ -48,5 +60,5 @@ pxseek lookup --input deep.tsv -o detailed.tsv
 ## What to read next
 
 - Go to [Search Recipes](Search-Recipes) for biology-first workflows.
-- Go to [Data Formats](Data-Formats) for TSV column details.
+- Go to [Data Formats](Data-Formats) for TSV, CSV, and JSON artifact details.
 - Go to [Troubleshooting](Troubleshooting) if a command behaves differently than expected.

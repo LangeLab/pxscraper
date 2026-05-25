@@ -23,7 +23,7 @@ uv run pxseek --help
 
 ```bash
 uv build
-uv pip install dist/pxseek-0.4.5-py3-none-any.whl
+uv pip install dist/pxseek-0.5.0-py3-none-any.whl
 pxseek --help
 ```
 
@@ -32,7 +32,7 @@ pxseek --help
 Use this after a maintainer has published the release to PyPI.
 
 ```bash
-uv pip install pxseek==0.4.5
+uv pip install pxseek==0.5.0
 ```
 
 ## Verify the installation

@@ -1,5 +1,6 @@
 """Tests for pxseek.cli module."""
 
+import json
 from unittest.mock import patch
 
 import pandas as pd
@@ -28,7 +29,7 @@ class TestCliBasics:
         runner = CliRunner()
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "0.4.5" in result.output
+        assert "0.5.0" in result.output
 
     def test_help(self):
         runner = CliRunner()
@@ -157,6 +158,34 @@ class TestFetchCommand:
         content = output_file.read_text()
         assert "<a " not in content
         assert "</a>" not in content
+
+    def test_fetch_json_stdout(self, tmp_path):
+        runner = CliRunner()
+        cache_dir = tmp_path / "cache"
+
+        with patch("pxseek.api.fetch_summary", return_value=MOCK_TSV):
+            result = runner.invoke(
+                main,
+                [
+                    "fetch",
+                    "-o",
+                    "-",
+                    "--format",
+                    "json",
+                    "--cache-dir",
+                    str(cache_dir),
+                ],
+            )
+
+        stdout = getattr(result, "stdout", result.output)
+        stderr = getattr(result, "stderr", "")
+
+        assert result.exit_code == 0, result.output
+        payload = json.loads(stdout)
+        assert payload[0]["dataset_id"] == "PXD000001"
+        assert "Fetched" not in stdout
+        if stderr:
+            assert "Fetched 2 datasets" in stderr
 
 
 # ---------------------------------------------------------------------------

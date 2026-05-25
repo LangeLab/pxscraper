@@ -10,7 +10,37 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 
 ### Planned
 
-- CLI output infrastructure (`_output.py`), input validation hardening, expanded coverage.
+- No unreleased changes yet.
+
+---
+
+## [0.5.0] - 2026-05-25 - [Tagged]
+
+### Added
+
+- GitHub wiki documentation set covering installation, CLI quickstart, data formats, search recipes, and troubleshooting.
+- Small workflow-oriented Python API exported at package root: `fetch_datasets()`, `filter_datasets()`, `lookup_datasets()`, plus `FetchResult` and `LookupResult`.
+- Shared artifact helpers exported at package root: `read_artifact()`, `render_artifact()`, and `write_artifact()`.
+- Project metadata links for homepage, repository, issues, and changelog in package metadata.
+- 7 tests for the documented workflow API surface.
+- 3 tests for shared artifact helpers and JSON / CSV round-tripping.
+- 2 CLI integration tests covering JSON stdout output and JSON artifact input for `lookup`.
+
+### Changed
+
+- CLI `fetch`, `filter`, and `lookup` now share one artifact contract with `tsv`, `csv`, and `json` output support.
+- CLI artifact output now supports `-o -` for stdout while status lines move to stderr to stay machine-friendly.
+- `filter` and `lookup` can now read JSON artifacts produced by the shared helpers or other `pxseek` commands.
+- CI workflow refreshed for Python 3.12-3.14 across Ubuntu, macOS, and Windows with explicit `uv` interpreter selection.
+- GitHub Actions updated to Node 24-compatible major versions and the Windows runner pinned to `windows-2025`.
+- README simplified to focus on installation, the shortest useful CLI path, and the GitHub wiki as the main documentation surface.
+- CLI quickstart, Python API, and data format docs updated to reflect the shared JSON / CSV / TSV artifact story.
+- Development and release planning docs updated to match the current repository state.
+
+### Fixed
+
+- Windows parser fixture tests now read UTF-8 data explicitly instead of relying on platform-default encodings.
+- Matrix CI jobs no longer fail with `Failed to spawn: pytest` due to `uv run` selecting the wrong interpreter or environment.
 
 ---
 
@@ -167,3 +197,5 @@ All notable changes to pxseek are documented here. The format follows [Keep a Ch
 ### Added
 
 - Project scaffold: package structure, `pyproject.toml`, basic CLI skeleton.
+
+[0.5.0]: https://github.com/LangeLab/pxseek/releases/tag/v0.5.0

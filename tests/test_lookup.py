@@ -1,5 +1,6 @@
 """Tests for the 'lookup' CLI command."""
 
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -215,6 +216,45 @@ class TestLookupHappyPath:
         assert result.exit_code == 0, result.output
         df = pd.read_csv(out, sep="\t")
         assert len(df) == 2
+
+    def test_input_json_pipeline(self, runner, tmp_path):
+        input_json = tmp_path / "filtered.json"
+        out = tmp_path / "result.json"
+        cache_dir = tmp_path / "cache"
+        input_json.write_text(
+            json.dumps(
+                [
+                    {"dataset_id": "PXD000001", "title": "Foo"},
+                    {"dataset_id": "PXD000002", "title": "Bar"},
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        with patch(
+            "pxseek.api.fetch_datasets_xml",
+            return_value={"PXD000001": MOCK_XML_001, "PXD000002": MOCK_XML_002},
+        ):
+            result = runner.invoke(
+                main,
+                [
+                    "lookup",
+                    "--input",
+                    str(input_json),
+                    "-o",
+                    str(out),
+                    "--format",
+                    "json",
+                    "--cache-dir",
+                    str(cache_dir),
+                    "--yes",
+                ],
+            )
+
+        assert result.exit_code == 0, result.output
+        payload = json.loads(out.read_text(encoding="utf-8"))
+        assert len(payload) == 2
+        assert payload[0]["dataset_id"] == "PXD000001"
 
     def test_ids_combined_with_ids_file(self, runner, tmp_path, ids_file):
         """--ids and --ids-file sources are merged and deduplicated."""
