@@ -153,7 +153,7 @@ class TestParseSummaryTsvFixture:
     @pytest.fixture()
     def fixture_tsv(self):
         fixture_path = Path(__file__).parent / "fixtures" / "sample_summary.tsv"
-        return fixture_path.read_text()
+        return fixture_path.read_text(encoding="utf-8")
 
     def test_fixture_parses(self, fixture_tsv):
         result = parse_summary_tsv(fixture_tsv)
@@ -316,7 +316,7 @@ class TestParseDatasetXmlFixture:
     @pytest.fixture()
     def fixture_xml(self):
         fixture_path = Path(__file__).parent / "fixtures" / "sample_dataset.xml"
-        return fixture_path.read_text()
+        return fixture_path.read_text(encoding="utf-8")
 
     def test_fixture_parses(self, fixture_xml):
         result = parse_dataset_xml(fixture_xml)
