@@ -1,19 +1,23 @@
-"""CLI entry point for pxseek."""
+"""CLI entry point for pxseek.
+
+Defines the ``fetch``, ``filter``, and ``lookup`` commands and keeps command-line
+interaction separate from the underlying library logic.
+"""
 
 import re
 from datetime import datetime
 from pathlib import Path
 
 import click
+import pandas as pd
+import requests
 
-from pxseek import __version__
+from pxseek import __version__, api, cache, models, parse
+from pxseek import filter as filt
 
 
-def _stale_fallback_text(stale_df, cache_dir):
+def _stale_fallback_text(stale_df: pd.DataFrame, cache_dir: Path | None) -> str:
     """Return stale cached data as TSV text with a warning to stderr."""
-    from datetime import datetime
-
-    from pxseek import cache
 
     info = cache.cache_info("summary", cache_dir=cache_dir)
     ts = ""
@@ -27,16 +31,12 @@ def _stale_fallback_text(stale_df, cache_dir):
     return stale_df.to_csv(sep="\t", index=False)
 
 
-def _fetch_summary_safe(verbose=False, cache_dir=None):
+def _fetch_summary_safe(verbose: bool = False, cache_dir: Path | None = None) -> str:
     """Fetch summary TSV from ProteomeCentral with friendly error handling.
 
     On network failure, falls back to stale cache if available.
     Returns raw TSV text (string).
     """
-    import requests
-
-    from pxseek import api, cache
-
     try:
         if verbose:
             click.echo("Downloading dataset listing from ProteomeCentral...")
@@ -75,8 +75,6 @@ def main():
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 def fetch(output, cache_dir, refresh, verbose):
     """Download the full ProteomeXchange dataset listing."""
-    from pxseek import cache, parse
-
     cache_base = Path(cache_dir) if cache_dir else None
     cdir = cache.get_cache_dir(cache_base)
 
@@ -174,9 +172,6 @@ def filter(
     delay,
 ):
     """Filter ProteomeXchange datasets by species, repo, keywords, dates, etc."""
-    from pxseek import cache, parse
-    from pxseek import filter as filt
-
     # --- Validate user-supplied regex patterns ---
     for name, pattern in [("species", species), ("instrument", instrument)]:
         if pattern:
@@ -206,8 +201,6 @@ def filter(
 
     # --- Load input data ---
     if input_file:
-        import pandas as pd
-
         if verbose:
             click.echo(f"Reading input from {input_file}")
         df = pd.read_csv(input_file, sep="\t", dtype=str)
@@ -260,15 +253,10 @@ def filter(
         )
 
         # Phase 2: fetch XML descriptions for all candidates
-        import requests
-
-        from pxseek import api
-        from pxseek.models import LOOKUP_CONFIRM_THRESHOLD
-
         cdir = cache.get_cache_dir(Path(cache_dir) if cache_dir else None)
         if "dataset_id" not in candidates_df.columns:
             raise click.ClickException(
-                "Input data has no 'dataset_id' column \u2014 required for --deep."
+                "Input data has no 'dataset_id' column. It is required for --deep."
             )
 
         candidate_ids = candidates_df["dataset_id"].tolist()
@@ -278,7 +266,7 @@ def filter(
         if verbose and cached_ids:
             click.echo(f"Using cached XML for {len(cached_ids)} dataset(s).")
 
-        if len(to_fetch) > LOOKUP_CONFIRM_THRESHOLD and not yes:
+        if len(to_fetch) > models.LOOKUP_CONFIRM_THRESHOLD and not yes:
             est_seconds = int(len(to_fetch) * delay)
             click.confirm(
                 f"Fetch XML for {len(to_fetch)} dataset(s)? (~{est_seconds}s at {delay}s/request)",
@@ -389,12 +377,6 @@ def filter(
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output.")
 def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     """Fetch detailed metadata for specific PXD identifiers."""
-    import pandas as pd
-    import requests
-
-    from pxseek import api, cache, parse
-    from pxseek.models import LOOKUP_CONFIRM_THRESHOLD, validate_pxd_id
-
     # ------------------------------------------------------------------ #
     # 1. Collect IDs from all sources                                      #
     # ------------------------------------------------------------------ #
@@ -429,7 +411,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     bad: list[str] = []
     for raw in raw_ids:
         try:
-            validated.append(validate_pxd_id(raw))
+            validated.append(models.validate_pxd_id(raw))
         except ValueError:
             bad.append(raw)
 
@@ -459,7 +441,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
     # ------------------------------------------------------------------ #
     # 4. Confirmation prompt for large fetches                             #
     # ------------------------------------------------------------------ #
-    if len(to_fetch) > LOOKUP_CONFIRM_THRESHOLD and not yes:
+    if len(to_fetch) > models.LOOKUP_CONFIRM_THRESHOLD and not yes:
         est_seconds = int(len(to_fetch) * delay)
         click.confirm(
             f"Fetch XML for {len(to_fetch)} dataset(s)? (~{est_seconds}s at {delay}s/request)",
@@ -517,7 +499,7 @@ def lookup(ids, ids_file, input_file, output, delay, cache_dir, yes, verbose):
         click.echo(msg, err=True)
 
     if not rows:
-        raise click.ClickException("No data to write.. all lookups failed.")
+        raise click.ClickException("No data to write. All lookups failed.")
 
     # ------------------------------------------------------------------ #
     # 7. Write output                                                       #

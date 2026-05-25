@@ -80,6 +80,7 @@ MOCK_XML_002 = MOCK_XML_TEMPLATE.format(dataset_id="PXD000002")
 
 @pytest.fixture()
 def runner():
+    """Provide a Click test runner."""
     return CliRunner()
 
 
@@ -95,7 +96,7 @@ def input_tsv(tmp_path):
 
 @pytest.fixture()
 def ids_file(tmp_path):
-    """Write a one-ID-per-line file."""
+    """Write a one-ID-per-line ID file."""
     p = tmp_path / "ids.txt"
     p.write_text("PXD000001\nPXD000002\n")
     return p

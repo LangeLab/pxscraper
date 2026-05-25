@@ -1,4 +1,8 @@
-"""TSV and XML parsing utilities."""
+"""TSV and XML parsing utilities.
+
+This module converts raw ProteomeCentral summary TSV and per-dataset XML
+payloads into the cleaned tabular shapes used by the rest of the project.
+"""
 
 import html
 import io
@@ -55,9 +59,11 @@ class ParseResult:
 
     @property
     def skipped_count(self) -> int:
+        """Return the number of malformed lines skipped during parsing."""
         return len(self.skipped_lines)
 
     def report(self) -> str:
+        """Return a human-readable summary of parse diagnostics."""
         lines: list[str] = []
         lines.append(f"parsed {len(self.df)} dataset(s) from {self.total_raw_lines} raw row(s)")
 
@@ -117,6 +123,16 @@ def _repair_multiline_tsv(raw_tsv: str) -> str:
 
 def parse_summary_tsv(raw_tsv: str) -> ParseResult:
     """Parse the raw ProteomeCentral summary TSV into a clean DataFrame.
+
+    Parameters
+    ----------
+    raw_tsv:
+        Raw TSV text returned by the ProteomeCentral summary endpoint.
+
+    Returns
+    -------
+    ParseResult
+        Cleaned summary DataFrame plus diagnostics about malformed or dropped rows.
 
     Returns a ParseResult containing diagnostics including which rows
     were skipped and why.
@@ -223,8 +239,23 @@ def parse_summary_tsv(raw_tsv: str) -> ParseResult:
     )
 
 
-def parse_dataset_xml(raw_xml: str) -> dict:
+def parse_dataset_xml(raw_xml: str) -> dict[str, str]:
     """Parse a single ProteomeXchange dataset XML into a flat dict.
+
+    Parameters
+    ----------
+    raw_xml:
+        Raw XML text returned by the ProteomeCentral dataset endpoint.
+
+    Returns
+    -------
+    dict[str, str]
+        Flat mapping of normalized metadata fields extracted from the XML document.
+
+    Raises
+    ------
+    lxml.etree.XMLSyntaxError
+        If ``raw_xml`` is not well-formed XML.
 
     Extracts: dataset_id, title, description, species, instruments,
     modifications, contacts, FTP links, PubMed IDs, keywords, review level.
@@ -237,7 +268,7 @@ def parse_dataset_xml(raw_xml: str) -> dict:
         if isinstance(elem.tag, str):
             elem.tag = elem.tag.rpartition("}")[2]
 
-    result = {}
+    result: dict[str, str] = {}
 
     # Dataset ID
     result["dataset_id"] = root.get("id", "")

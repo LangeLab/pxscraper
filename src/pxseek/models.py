@@ -1,4 +1,8 @@
-"""Column names, constants, and data models."""
+"""Column names, constants, and validation helpers.
+
+This module centralizes the normalized summary column names, cache defaults,
+HTTP request settings, and dataset ID validation used throughout the project.
+"""
 
 import re
 
@@ -50,8 +54,23 @@ PXD_ID_RE = re.compile(r"^(?:R)?PXD\d{6,}$")
 def validate_pxd_id(dataset_id: str) -> str:
     """Validate and return a PXD or RPXD dataset ID, or raise ValueError.
 
+    Parameters
+    ----------
+    dataset_id:
+        Candidate ProteomeXchange dataset identifier.
+
+    Returns
+    -------
+    str
+        Normalized dataset identifier with surrounding whitespace removed.
+
+    Raises
+    ------
+    ValueError
+        If ``dataset_id`` is not a valid ``PXD`` or ``RPXD`` identifier.
+
     The ProteomeCentral API only accepts PXD-prefixed (and reanalysis RPXD)
-    identifiers.  Partner-repository native IDs (MassIVE ``MSV``, jPOST
+    identifiers. Partner-repository native IDs (MassIVE ``MSV``, jPOST
     ``JPST``, etc.) are *not* recognised, those datasets must be looked up
     by their PXD-mapped alias, if one exists.
     """

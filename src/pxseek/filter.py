@@ -9,15 +9,43 @@ from pathlib import Path
 
 import pandas as pd
 
+type FilterSummary = dict[str, int | list[str]]
+
 
 def by_species(df: pd.DataFrame, pattern: str) -> pd.DataFrame:
-    """Filter rows where the species column matches a case-insensitive regex."""
+    """Filter rows where the species column matches a case-insensitive regex.
+
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    pattern:
+        Case-insensitive regular expression matched against the ``species`` column.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered copy containing only matching rows.
+    """
     mask = df["species"].str.contains(pattern, case=False, na=False, regex=True)
     return df[mask].copy()
 
 
 def by_repository(df: pd.DataFrame, repos: str) -> pd.DataFrame:
-    """Filter rows where the repository matches one of the given repos (comma-separated)."""
+    """Filter rows where the repository matches one of the given repos.
+
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    repos:
+        Comma-separated repository names.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered copy containing only rows from the selected repositories.
+    """
     repo_list = [r.strip().lower() for r in repos.split(",") if r.strip()]
     mask = df["repository"].str.strip().str.lower().isin(repo_list)
     return df[mask].copy()
@@ -31,6 +59,22 @@ def by_keywords(
     match_all: bool = False,
 ) -> pd.DataFrame:
     r"""Filter rows where keywords match in the specified columns.
+
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    keywords:
+        Comma-separated keyword string or path to a file containing one keyword per line.
+    columns:
+        Optional list of columns to search. Defaults to ``["title", "keywords"]``.
+    match_all:
+        When ``True``, all keywords must match. Otherwise any keyword match is sufficient.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered copy containing rows that satisfy the keyword logic.
 
     By default, multiple keywords are combined with OR logic (any match).
     When *match_all* is ``True``, all keywords must match (AND logic).
@@ -88,6 +132,20 @@ def by_date_range(
 ) -> pd.DataFrame:
     """Filter rows by announce_date range (inclusive).
 
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    after:
+        Optional lower date bound in ``YYYY-MM-DD`` format.
+    before:
+        Optional upper date bound in ``YYYY-MM-DD`` format.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered copy containing rows within the requested date range.
+
     Dates are parsed with ``pd.to_datetime(errors="coerce")``.
     Rows with unparseable dates (NaT) are excluded from range matches.
     """
@@ -103,7 +161,20 @@ def by_date_range(
 
 
 def by_instrument(df: pd.DataFrame, pattern: str) -> pd.DataFrame:
-    """Filter rows where the instrument column matches a case-insensitive regex."""
+    """Filter rows where the instrument column matches a case-insensitive regex.
+
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    pattern:
+        Case-insensitive regular expression matched against the ``instrument`` column.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered copy containing only matching rows.
+    """
     mask = df["instrument"].str.contains(pattern, case=False, na=False, regex=True)
     return df[mask].copy()
 
@@ -119,8 +190,34 @@ def apply_filters(
     before: str | None = None,
     instrument: str | None = None,
     match_all: bool = False,
-) -> tuple[pd.DataFrame, dict]:
+) -> tuple[pd.DataFrame, FilterSummary]:
     """Apply all active filters sequentially and return (filtered_df, summary).
+
+    Parameters
+    ----------
+    df:
+        Summary DataFrame to filter.
+    species:
+        Optional species regex.
+    repository:
+        Optional comma-separated repository list.
+    keywords:
+        Optional keyword string or keyword file path.
+    keyword_columns:
+        Optional comma-separated column names for keyword search.
+    after:
+        Optional lower date bound in ``YYYY-MM-DD`` format.
+    before:
+        Optional upper date bound in ``YYYY-MM-DD`` format.
+    instrument:
+        Optional instrument regex.
+    match_all:
+        When ``True``, keyword filters require all keywords to match.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, FilterSummary]
+        Filtered DataFrame plus a summary of counts and active filters.
 
     The summary dict contains:
       - original_count: rows before filtering
@@ -163,7 +260,7 @@ def apply_filters(
         df = by_instrument(df, instrument)
         active_filters.append(f"instrument: {instrument}")
 
-    summary: dict = {
+    summary: FilterSummary = {
         "original_count": original_count,
         "filtered_count": len(df),
         "active_filters": active_filters,

@@ -1,4 +1,12 @@
-"""ProteomeCentral API client."""
+"""ProteomeCentral API client.
+
+Endpoints used:
+    GET summary TSV endpoint                 -> raw TSV text
+    GET dataset XML endpoint by PXD / RPXD   -> raw XML text
+
+This module handles HTTP requests, retry policy, politeness delay, and User-Agent
+configuration. Parsing of TSV and XML payloads belongs in :mod:`pxseek.parse`.
+"""
 
 import logging
 import time
@@ -17,8 +25,8 @@ DATASET_XML_URL = (
     "https://proteomecentral.proteomexchange.org/cgi/GetDataset?outputMode=XML&ID={dataset_id}"
 )
 
-# Retry settings for XML fetches, exponential backoff (1s, 2s, 4s)
-XML_RETRY_BACKOFF = [1, 2, 4]
+# Retry settings for XML fetches, exponential backoff (1s, 2s, 4s).
+XML_RETRY_BACKOFF: list[int] = [1, 2, 4]
 
 
 def _session() -> requests.Session:
@@ -31,7 +39,21 @@ def _session() -> requests.Session:
 def fetch_summary(session: requests.Session | None = None) -> str:
     """Download the full ProteomeXchange dataset summary TSV.
 
-    Returns the raw TSV text (~50k rows).
+    Parameters
+    ----------
+    session:
+        Optional shared :class:`requests.Session`. When omitted, a new session
+        with the project User-Agent is created.
+
+    Returns
+    -------
+    str
+        Raw TSV text returned by the summary endpoint.
+
+    Raises
+    ------
+    requests.HTTPError
+        If the summary endpoint returns a non-success HTTP response.
     """
     s = session or _session()
     resp = s.get(SUMMARY_URL, timeout=HTTP_TIMEOUT)
@@ -46,8 +68,34 @@ def fetch_dataset_xml(
 ) -> str:
     """Download the XML metadata for a single PXD dataset.
 
+    Parameters
+    ----------
+    dataset_id:
+        ProteomeXchange dataset identifier, e.g. ``"PXD000001"``.
+    session:
+        Optional shared :class:`requests.Session`. When omitted, a new session
+        with the project User-Agent is created.
+    delay:
+        Seconds to wait before the first request for API politeness.
+
+    Returns
+    -------
+    str
+        Raw XML text returned by ProteomeCentral.
+
+    Raises
+    ------
+    ValueError
+        If ``dataset_id`` is not a valid ``PXD`` or ``RPXD`` identifier.
+    requests.HTTPError
+        If the server returns a non-success HTTP response.
+    requests.ConnectionError
+        If all retry attempts fail with a connection-level error.
+    requests.Timeout
+        If all retry attempts fail with a timeout.
+
     Retries up to 3 times with exponential backoff (1s, 2s, 4s) on
-    connection-level errors (ConnectionError, Timeout).  HTTP 4xx/5xx
+    connection-level errors (ConnectionError, Timeout). HTTP 4xx/5xx
     responses are *not* retried.
 
     Includes a polite delay before the first attempt to avoid overloading
@@ -75,7 +123,8 @@ def fetch_dataset_xml(
                 log.info("Retrying %s in %ss (attempt %d)", dataset_id, wait, attempt + 1)
                 time.sleep(wait)
 
-    raise last_exc  # type: ignore[union-attr]
+    assert last_exc is not None
+    raise last_exc
 
 
 def fetch_datasets_xml(
@@ -84,6 +133,28 @@ def fetch_datasets_xml(
     delay: float = XML_REQUEST_DELAY,
 ) -> dict[str, str | None]:
     """Download XML metadata for a list of PXD dataset IDs.
+
+    Parameters
+    ----------
+    ids:
+        Dataset identifiers to fetch. All identifiers are validated before any
+        request is started.
+    session:
+        Optional shared :class:`requests.Session`. When omitted, a new session
+        with the project User-Agent is created.
+    delay:
+        Seconds to wait between individual XML requests.
+
+    Returns
+    -------
+    dict[str, str | None]
+        Mapping of each validated dataset ID to raw XML text, or ``None`` when
+        the fetch for that dataset fails.
+
+    Raises
+    ------
+    ValueError
+        If any identifier in ``ids`` is not a valid ``PXD`` or ``RPXD`` value.
 
     All IDs are validated upfront before any requests are made.
     Raises ``ValueError`` if any ID is invalid.
@@ -111,7 +182,7 @@ def fetch_datasets_xml(
             try:
                 xml = fetch_dataset_xml(dataset_id, session=s, delay=delay)
                 results[dataset_id] = xml
-            except Exception as exc:  # noqa: BLE001
+            except (ValueError, requests.RequestException) as exc:
                 log.warning("Failed to fetch %s: %s", dataset_id, exc)
                 results[dataset_id] = None
     except KeyboardInterrupt:
