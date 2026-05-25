@@ -8,13 +8,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.5-8B5CF6?style=flat-square" alt="v0.4.5">
   <img src="https://img.shields.io/badge/python-3.12--3.14-2D7D46?style=flat-square&logo=python&logoColor=white" alt="Python 3.12-3.14">
-  <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
-  <img src="https://img.shields.io/badge/tests-269%20passed-22C55E?style=flat-square" alt="269 tests">
+  <img src="https://img.shields.io/badge/version-0.4.5-8B5CF6?style=flat-square" alt="v0.4.5">
   <img src="https://img.shields.io/badge/status-beta-C17D10?style=flat-square" alt="Beta">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-Keep%20a%20Changelog-E05D44?style=flat-square" alt="Changelog"></a>
+  <img src="https://img.shields.io/badge/tests-269%20passed-22C55E?style=flat-square" alt="269 tests">
+  <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
+</p>
+
+<p align="center">
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-CHANGELOG-E05D44?style=flat-square" alt="Changelog"></a>
   <a href="CITATION.cff"><img src="https://img.shields.io/badge/cite-CITATION.cff-0066CC?style=flat-square" alt="Citation"></a>
+  <a href="https://github.com/LangeLab/pxseek/wiki"><img src="https://img.shields.io/badge/docs-GitHub%20Wiki-0F766E?style=flat-square" alt="Wiki"></a>
 </p>
 
 `pxseek` replaces the original Selenium-based web scraper with a clean, API-driven approach using the ProteomeCentral bulk TSV and per-dataset XML endpoints. No browser or ChromeDriver required.
@@ -61,14 +65,15 @@ Use the docs for everything beyond that minimal path.
 
 ## Documentation
 
-Detailed usage and examples live in the docs pages:
+More detailed documentation and examples live in the [GitHub wiki](https://github.com/LangeLab/pxseek/wiki).
+
+The repository `wiki/` folder tracks the same pages in markdown:
 
 - [Installation](wiki/Installation.md)
 - [CLI Quickstart](wiki/CLI-Quickstart.md)
 - [Data Formats](wiki/Data-Formats.md)
 - [Search Recipes](wiki/Search-Recipes.md)
-- [Troubleshooting](wiki/Troubleshooting.md)
-- [FAQ](wiki/FAQ.md)
+- [Troubleshooting and FAQ](wiki/Troubleshooting.md)
 
 ## Development
 

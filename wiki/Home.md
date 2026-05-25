@@ -8,15 +8,14 @@ This wiki is the user-facing documentation set for `pxseek`.
 - [CLI Quickstart](CLI-Quickstart)
 - [Search Recipes](Search-Recipes)
 - [Data Formats](Data-Formats)
-- [Troubleshooting](Troubleshooting)
-- [FAQ](FAQ)
+- [Troubleshooting and FAQ](Troubleshooting)
 
 ## Recommended first path
 
 1. Install `pxseek`.
 2. Run the three-step workflow: `fetch`, `filter`, then `lookup`.
 3. Use Search Recipes when you want a biologically focused starting point.
-4. Use Data Formats and Troubleshooting only when you need more detail.
+4. Use Data Formats or Troubleshooting and FAQ when you need more detail.
 
 ## Core idea
 

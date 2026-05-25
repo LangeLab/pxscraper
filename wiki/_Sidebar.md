@@ -5,5 +5,4 @@
 - [CLI Quickstart](CLI-Quickstart)
 - [Search Recipes](Search-Recipes)
 - [Data Formats](Data-Formats)
-- [Troubleshooting](Troubleshooting)
-- [FAQ](FAQ)
+- [Troubleshooting and FAQ](Troubleshooting)
